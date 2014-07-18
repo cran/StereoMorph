@@ -1,4 +1,4 @@
-unifyLandmarks <- function(lm.array){
+unifyLandmarks <- function(lm.array, min.common = dim(lm.array)[2]){
 	# Modified from R function unifyVD() written by Annat Haber
 	# Rohlf 1990. Proceedings of the Michigan Morphometrics Workshop
 
@@ -63,8 +63,8 @@ unifyLandmarks <- function(lm.array){
 			# REPLACE NON-COMMON LANDMARKS BETWEEN TWO MATRICES WITH NA
 			common_m1[which(is.na(all_m2))] <- NA
 			
-			# SKIP IF NUMBER OF COMMON LANDMARKS IS LESS THAN THREE
-			if(sum(!is.na(common_m1[, 1])) < dim(lm.array)[2]) next
+			# SKIP IF NUMBER OF COMMON LANDMARKS IS LESS THAN MIN.COMMON
+			if(sum(!is.na(common_m1[, 1])) < min.common) next
 
 			# TRANSLATE AND ROTATE M2 TO MINIMIZE ALIGNMENT ERROR BETWEEN M1 AND M2
 			all_m2 <- findOptimalPointAlignment(all_m1, all_m2)

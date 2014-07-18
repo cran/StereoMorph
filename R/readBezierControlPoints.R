@@ -13,7 +13,7 @@ readBezierControlPoints <- function(file, ndim = 2, ...){
 		if(!file.info(file[i])$size) stop(paste0("File '", file[i], "' is empty."))
 	
 		# FIND MAX NUMBER OF COLUMNS IN FILE
-		Y <- readLines(file[i], n=-1, ...)
+		Y <- readLines(file[i], warn = FALSE, ...)
 		col_ct <- unlist(lapply(Y, function(x) length(unlist(strsplit(x, "\t")))))
 	
 		# SET NUMBER OF ROWS
