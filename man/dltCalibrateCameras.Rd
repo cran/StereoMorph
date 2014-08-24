@@ -8,7 +8,8 @@ This function uses the corners from a grid positioned in several different orien
 }
 \usage{
 dltCalibrateCameras(coor.2d, nx, grid.size, c.run = FALSE, reduce.grid.dim = 3,
-                    print.progress = FALSE)
+                    fit.min.break = 1, nlm.eval.max = 350, nlm.iter.max = 250,
+                    objective.min = 2, print.progress = FALSE)
 
 \method{summary}{dltCalibrateCameras}(object, ...)
 }
@@ -18,6 +19,10 @@ dltCalibrateCameras(coor.2d, nx, grid.size, c.run = FALSE, reduce.grid.dim = 3,
   \item{grid.size}{the size of the grid squares in real-world units (e.g. millimeters).}
   \item{c.run}{a logical indicating whether a second optimization should be performed on the calibration coefficients.}
   \item{reduce.grid.dim}{a numeric indicating the number of grid points along each dimension for each grid after resampling. The total number of resampled points is \code{reduce.grid.dim^2}. Resampling can be turned off by setting this to \code{0} or \code{FALSE}. The default is recommended. \code{reduce.grid.dim} must be greater than two.}
+  \item{fit.min.break}{passed to \code{resampleGridImagePoints()}. A minimum returned by \code{nlm()} (indicating goodness of fit in pixel coordinates) at which \code{resampleGridImagePoints()} will stop iterating to find a better fit for each checkerboard grid. Ignored if \code{reduce.grid.dim} is \code{0} or \code{FALSE}.}
+  \item{nlm.eval.max}{The maximum number of evaluations to be performed by \code{nlminb()} during coefficient optimization, passed as a control parameter to \code{nlminb()}. Keeping this value as low as possible without excluding actual convergence speeds performance of the function by preventing the function from stalling far from the optimal values.}
+  \item{nlm.iter.max}{The maximum number of iterations to be performed by \code{nlminb()} during coefficient optimization, passed as a control parameter to \code{nlminb()}. Keeping this value as low as possible without excluding actual convergence speeds performance of the function by preventing the function from stalling far from the optimal values.}
+  \item{objective.min}{The expected mean reconstruction error when optimizing the calibration coefficients (the minimum, or \code{objective} value returned by \code{nlminb()}). A value between 0.7 and 3 should be reasonable.}
   \item{print.progress}{a logical indicating whether the progress of the function should be printed while running. This includes the error in grid re-sampling, an iteration count during optimization and other outputs relating to the optimization.}
   \item{object}{a list of class \code{"dltCalibrateCameras"} (the output of \code{dltCalibrateCameras()}).}
   \item{...}{further arguments passed to or from other methods.}
@@ -25,7 +30,7 @@ dltCalibrateCameras(coor.2d, nx, grid.size, c.run = FALSE, reduce.grid.dim = 3,
 \details{
 Calibration is the most challenging step in stereo camera data collection. Most fundamentally, DLT calibration requires a set of 3D coordinates and their corresponding 2D pixel coordinates in each camera view in order to derive calibration coefficients (see \code{\link{dltCoefficients}}). These coefficients can then be used to reconstruct any point in 3D given its 2D pixel coordinates in two or more camera views. DLT calibration has traditionally been done using a "calibration object", typically a 3D box-shaped structure filled with markers at known 3D positions. Such objects require the use of high precision machining in order to achieve an accurate calibration and the calibration points are usually digitized manually.
 
-The \code{dltCalibrateCameras()} function provides a camera calibration routine that is easier to implement and potentially more accurate. This function uses the corners from a grid positioned in several different orientations within the calibration space to estimate the DLT calibration coefficients that minimize reconstruction error. The easiest method for obtaining these corner points is to print a checkerboard pattern (using \code{\link{drawCheckerboard}}), glue the pattern to a thick pane of plexiglass and use the C++ function \href{http://stereomorph.blogspot.com/2014/04/auto-detecting-checkerboard-corners.html}{\code{findCheckerboardCorners()}} to automatically extract the pixel coordinates of the internal corners. Complete instructions for each of these steps, including downloading and compiling \code{findCheckerboardCorners()}, can be found at \href{http://stereomorph.blogspot.com/2014/04/auto-detecting-checkerboard-corners.html}{Auto-detecting checkerboard corners}. Unfortunately, due to its dependence on several different libraries (primarily \href{http://opencv.org/}{OpenCV}) it is currently not possible to run \code{findCheckerboardCorners()} within R, although future versions of StereoMorph may include this functionality.
+The \code{dltCalibrateCameras()} function provides a camera calibration routine that is easier to implement and potentially more accurate. This function uses the corners from a grid positioned in several different orientations within the calibration space to estimate the DLT calibration coefficients that minimize reconstruction error. The easiest method for obtaining these corner points is to print a checkerboard pattern (using \code{\link{drawCheckerboard}}), glue the pattern to a thick pane of plexiglass and use \code{\link{findCheckerboardCorners}} to automatically extract the pixel coordinates of the internal corners. For a step-by-step tutorial on how to create a checkerboard pattern, see \href{http://stereomorph.blogspot.com/2014/04/creating-checkerboard-pattern.html}{Creating a checkerboard pattern}.
 
 The grid pattern should be photographed in at least four different positions, spanning the volume to be calibrated (the tutorial files loaded with StereoMorph include eight different positions). Using only a couple of positions will result in uneven sampling of the calibration volume causing larger errors in some regions relative to others. Once the pixel coordinates of the grid points (e.g. the internal corners of the checkerboard pattern) have been extracted from all of the calibration images, they should be read into an array using \code{\link{readCheckerboardsToArray}}. This function allows for the point order to be reversed along rows, columns or both. If one of the cameras views the pattern upside down relative to another camera or if the pattern is in a different orientation, the grid points may be extracted in a different order.  This can be fixed using the \code{row.reverse} and \code{col.reverse} arguments in \code{\link{readCheckerboardsToArray}}. It is \strong{essential} that the grid points extracted from each camera view correspond to each other row-by-row or else the calibration will not work.
 
@@ -46,7 +51,6 @@ a list of class \code{"dltCalibrateCameras"} with the following elements:
   \item{mean.reconstruct.rmse}{the RMS error when \code{coor.2d} and the optimized calibration coefficients \code{cal.coeff} are input to \code{\link{dltReconstruct}}.}
   \item{coefficient.rmse}{the RMS error when \code{coor.2d} and the optimized 3D coordinates \code{coor.3d} are input to \code{\link{dltCoefficients}}.}
   \item{t.param.final}{the final transformation parameters reported by \code{nlm()} from the first optimization. \code{'t.'} refers to the transformation optimization.}
-  \item{t.iter}{the number of iterations reported by \code{nlm()} from the first optimization.}
   \item{t.min}{the minimum reported by \code{nlm()} from the first optimization. This is the mean RMS error across all camera views returned by \code{\link{dltCoefficients}} for the downsampled grid points.}
   \item{t.runtime}{the run-time (in seconds) for the first optimization.}
 if \code{c.run} is \code{FALSE}, the following are \code{NA}. Otherwise,
@@ -57,8 +61,6 @@ if \code{c.run} is \code{FALSE}, the following are \code{NA}. Otherwise,
   \item{c.runtime}{the run-time (in seconds) for the second optimization.}
 }
 \references{
-Bradski, G. (2007). The opencv library. \emph{Doctor Dobbs Journal}, \bold{25}, 120--126.
-
 For a general overview of DLT: \url{http://kwon3d.com/theory/dlt/dlt.html}
 }
 \author{Aaron Olsen}
@@ -92,17 +94,19 @@ coor.2d <- readCheckerboardsToArray(file=file, nx=nx, ny=ny, col.reverse=TRUE)
 ## SET GRID SIZE (IN MM)
 grid.size <- 6.347889
 
+\dontrun{
 ## CALIBRATE CAMERAS
 ## TO REDUCE RUN-TIME, WE JUST USE CORNERS FROM TWO IMAGES (1 AND 5)
 dlt_calibrate_cameras <- dltCalibrateCameras(coor.2d=coor.2d[, , c(1, 5), ], nx=nx, 
   grid.size=grid.size, c.run=FALSE, print.progress=TRUE)
 
-## UNCOMMENT BELOW TO RUN CALIBRATION ON ALL IMAGES
-## ACCURACY IS GREATLY IMPROVED
-## dlt_calibrate_cameras <- dltCalibrateCameras(coor.2d=coor.2d, nx=nx, 
-##  grid.size=grid.size, c.run=FALSE, print.progress=TRUE)
+## RUN CALIBRATION ON ALL IMAGES, ACCURACY IS GREATLY IMPROVED
+dlt_calibrate_cameras <- dltCalibrateCameras(coor.2d=coor.2d, nx=nx, 
+  grid.size=grid.size, c.run=FALSE, print.progress=TRUE)
 
 ## PRINT SUMMARY
 summary(dlt_calibrate_cameras)
 }
+}
 \keyword{ DLT }
+\keyword{ calibration }

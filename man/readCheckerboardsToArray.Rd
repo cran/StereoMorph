@@ -2,14 +2,14 @@
 \alias{readCheckerboardsToArray}
 \title{Reads file(s) containing grid points into an array}
 \description{
-This function reads grid point matrices into an array from one or more files allowing for point order reversals along rows, columns, or both.
+This function reads grid point matrices into an array from a matrix files allowing for point order reversals along rows, columns, or both.
 }
 \usage{
 readCheckerboardsToArray(file, nx, ny, col.reverse = FALSE, row.reverse = FALSE, 
                          na.omit=FALSE, ...)
 }
 \arguments{
-  \item{file}{a vector or matrix of file paths to be read into an array. Each file path should correspond to a file containing a single landmark matrix.}
+  \item{file}{a matrix of file paths to be read into an array. Each file path should correspond to a file containing a single landmark matrix.}
   \item{nx}{the number of internal corners in the first dimension along which grid points are ordered.}
   \item{ny}{the number of internal corners in the second dimension along which grid points are ordered.}
   \item{col.reverse}{a logical indicating whether the column order of grid points should be reversed. Can be either single value, a vector or a matrix.}
@@ -43,29 +43,6 @@ ny <- 3
 ## SET FILE PATHS
 file <- matrix(c(paste0(fdir, "rcta_a", 1:3, "_v1.txt"), 
                  paste0(fdir, "rcta_a", 1:3, "_v2.txt")), ncol=2)
-
-## READ SINGLE FILE ##
-## NO REVERSALS
-readCheckerboardsToArray(file[1, 1], nx, ny)
-
-## REVERSE ROWS
-readCheckerboardsToArray(file[1, 1], nx, ny, row.reverse=TRUE)
-
-## REVERSE COLUMNS
-readCheckerboardsToArray(file[1, 1], nx, ny, col.reverse=TRUE)
-
-## REVERSE ROWS AND COLUMNS
-## SAME AS SIMPLE ORDER REVERSAL
-readCheckerboardsToArray(file[1, 1], nx, ny, col.reverse=TRUE, row.reverse=TRUE)
-
-
-## READ VECTOR OF FILES ##
-## NO REVERSALS
-readCheckerboardsToArray(file[, 1], nx, ny)
-
-## REVERSE ROWS IN THE FIRST TWO FILES
-readCheckerboardsToArray(file[, 1], nx, ny, row.reverse=c(TRUE, TRUE, FALSE))
-
 
 ## READ MATRIX OF FILES ##
 ## REVERSE COLUMNS IN FIRST COLUMN OF FILE MATRIX

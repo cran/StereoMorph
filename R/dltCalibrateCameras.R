@@ -1,4 +1,9 @@
-dltCalibrateCameras <- function(coor.2d, nx, grid.size, c.run = FALSE, reduce.grid.dim = 3, print.progress = FALSE){
+dltCalibrateCameras <- function(coor.2d, nx, grid.size, c.run = FALSE, reduce.grid.dim = 3, fit.min.break = 1, nlm.eval.max = 350, nlm.iter.max = 250, objective.min = 2, print.progress = FALSE){
+
+	# REMOVE ANY SETS WITH NA
+	is_na <- apply(is.na(coor.2d), c(3, 4), 'sum')
+	is_na_rowsums <- rowSums(is_na)
+	coor.2d <- coor.2d[, , is_na_rowsums == 0, ]	
 
 	# FIND SECOND GRID DIMENSION
 	ny <- dim(coor.2d)[1]/nx
@@ -7,7 +12,7 @@ dltCalibrateCameras <- function(coor.2d, nx, grid.size, c.run = FALSE, reduce.gr
 	if(reduce.grid.dim){
 
 		# CHECK THAT reduce.grid.dim IS GREATER THAN TWO
-		if(reduce.grid.dim < 3) stop(paste0("reduce.grid.dim (currently ", reduce.grid.dim, ") must be greater than 2."))
+		if(reduce.grid.dim < 3) stop(paste0("reduce.grid.dim (", reduce.grid.dim, ") must be greater than 2."))
 		
 		# SET REDUCED GRID DIMENSIONS
 		rx <- reduce.grid.dim
@@ -24,8 +29,8 @@ dltCalibrateCameras <- function(coor.2d, nx, grid.size, c.run = FALSE, reduce.gr
 
 		for(i in 1:dim(coor.2d)[3]){
 			for(j in 1:dim(coor.2d)[4]){
-				if(print.progress) cat('\t', (i-1)*dim(coor.2d)[4] + j, ') ', sep='')
-				coor_2d_red[, , i, j] <- resampleGridImagePoints(pts=coor.2d[, , i, j], nx=nx, rx=rx, ry=ry, print.progress=print.progress)$pts
+				if(print.progress) cat('\t', (i-1)*dim(coor.2d)[4] + j, ') Aspect ', i, ', View ', j, '; ', sep='')
+				coor_2d_red[, , i, j] <- resampleGridImagePoints(pts=coor.2d[, , i, j], nx=nx, rx=rx, ry=ry, fit.min.break=fit.min.break, print.progress=print.progress)$pts
 			}
 		}
 	}else{
@@ -38,43 +43,119 @@ dltCalibrateCameras <- function(coor.2d, nx, grid.size, c.run = FALSE, reduce.gr
 	}	
 
 	# SCALE INITIAL TRANSLATE PARAMETER TO REAL-WORLD UNITS (APPROX HALF THE MAX DIMENSION OF GRID)
-	t_init <- (max(nx, ny)*grid.size)/4
-
-	# SET INITIAL TRANSFORM PARAMETERS
-	p_init <- matrix(rep(c(0.1, 0.1, 0.1, t_init, t_init, t_init), dim(coor.2d)[3]), nrow=6)
-
-	# SET INITIAL RUNTIME
-	run_time_t <- 0
-
-	# SET TOTAL ITERATIONS
-	total_iter_t <- 0
+	t_init <- (max(nx, ny)*grid.size)/3
 	
-	# SET FIRST COLUMN TO ZEROS
-	p_init[, 1] <- rep(0, 6)
-
-	# GET 2D COORDINATE SUBSET MATRIX FOR TRANSFORMATION OPTIMIZATION
-	coor_2d_t <- apply(coor_2d_red, c(2, 4), matrix, byrow=FALSE)
-
 	# SET INITIAL TIME POINT
 	ptm <- proc.time()
 
-	# SET INITIAL NUMBER OF ITERATIONS
-	#t_iter <<- 0
-
 	# RUN NLM FUNCTION TO FIND TRANSFORMATION PARAMETERS THAT MINIMIZE INTERNAL RMS CALIBRATION ERROR
-	if(print.progress) cat('\nFull Transform RMSE Minimization\nNumber of parameters:', length(c(p_init[, 2:ncol(p_init)])), '\nNumber of points:', rx*ry*dim(coor.2d)[3], '\nRunning minimization...')
-	nlm_res_t <- nlm(dltTransformationParameterRMSError, p=c(p_init[, 2:ncol(p_init)]), fscale=1, stepmax=max(nx, ny)*grid.size*10, iterlim=300*(length(c(p_init[, 2:ncol(p_init)]))/6), steptol=1e-9, coor.2d=coor_2d_t[, , 1:2], nx=rx, ny=ry, sx=sx, sy=sy, p.fixed=rep(0, 6))
+	if(print.progress) cat('\nFull Transform RMSE Minimization\nNumber of parameters:', (dim(coor.2d)[3]-1)*6, '\nNumber of points:', rx*ry*dim(coor.2d)[3], '\n')
+
+	control <- list(eval.max = nlm.eval.max, iter.max = nlm.iter.max)
+	nlm_calls_max <- 12
+
+	# SET STARTING NUMBER OF GRIDS FOR OPTIMIZATION
+	grid_incl_min <- if(dim(coor.2d)[3] == 2){2}else{3}
+	
+	# SET FIXED START PARAMETERS, FIX FIRST GRID AT ORIGIN
+	p_fix <- c()
+
+	# SET INITIAL VARIABLE TRANSFORM PARAMETERS
+	p_var <- c(matrix(rep(c(0.1, 0.2, 0.3, t_init*1.1, t_init*1.2, t_init*1.3), dim(coor.2d)[3]-1), nrow=6))
+	#print(p_var)
+
+	for(num_grid in grid_incl_min:dim(coor.2d)[3]){
+
+		if(print.progress) cat('\nRunning minimization with ', num_grid, ' grids...', sep='')
+
+		# GET 2D COORDINATE SUBSET MATRIX FOR TRANSFORMATION OPTIMIZATION
+		coor_2d_t <- apply(coor_2d_red[, , 1:num_grid, ], c(2, 4), matrix, byrow=FALSE)
+
+		lower <- rep(c(rep(-pi, 3), rep(-7*max(nx, ny)*grid.size, 3)), num_grid)
+
+		# SET NLM CALL VARIABLES
+		nlm_min <- rep(NA, nlm_calls_max)
+		nlm_calls <- list()
+
+		# SAVE PROCESSING TIME
+		nlm_start <- proc.time()
+
+		for(nlm_n in 1:nlm_calls_max){
+
+			# VARY STARTING PARAMETERS EACH ITERATION
+			if(nlm_n == 1) v <- c(1,1,1, 1,1,1, 1)
+			if(nlm_n == 2) v <- -c(1,1,1, 0,1,1, 1)
+			if(nlm_n == 3) v <- c(1,1,1, 1,0,1, 1)
+			if(nlm_n == 4) v <- -c(1,0,1, 1,0,1, 1)
+			if(nlm_n == 5) v <- c(1,1,0, 1,0,0, 1)
+			if(nlm_n == 6) v <- -c(0.5,0,3, 0,0,2, 1)
+			if(nlm_n == 7) v <- c(2,0,0, 0,3,0, 1)
+			if(nlm_n == 8) v <- -c(0.5,1,3, 1,0.5,0, 0)
+			if(nlm_n == 9) v <- c(0,0,2, 0,2,0, 0)
+			if(nlm_n == 10) v <- -c(2,0,0.5, 1,0.5,0, 1)
+			if(nlm_n == 11) v <- c(2,0,4, 2,1,0, 0.5)
+			if(nlm_n == 12) v <- c(1,2,0.3, 1,3,2, 0)
+
+			# SET STARTING PARAMETERS
+			var_len <- (num_grid-1)*6 - length(p_fix)
+			start <- p_var[1:var_len]*rep(v, var_len)[1:var_len]
+			if(length(p_fix)) start <- c(p_fix, start)
+			#print(matrix(start, nrow=6))
+
+			if(print.progress) cat(' ', nlm_n, sep='')
+
+			nlm_fit <- tryCatch(
+				expr={
+					nlminb(start=start, objective=dltTransformationParameterRMSError, 
+						control=control, lower=lower, upper=-lower, coor.2d=coor_2d_t, nx=rx, ny=ry, 
+						sx=sx, sy=sy, p.fixed=rep(0, 6))
+				},
+				error=function(cond){if(print.progress) cat('F');return(NULL)},
+				warning=function(cond) return(NULL)
+			)
+
+			# FAILED TO CONVERGE
+			if(!is.null(nlm_fit)){
+
+				# GET MINIMUM
+				if(print.progress) cat('T')
+				nlm_calls[[nlm_n]] <- nlm_fit
+				nlm_min[nlm_n] <- nlm_calls[[nlm_n]]$objective
+
+				# IF OPTIMIZATION MINIMUM IS LESS THAN ONE, STOP ITERATING
+				if(nlm_calls[[nlm_n]]$convergence == 0 && nlm_calls[[nlm_n]]$objective < objective.min) break
+			}
+		}
+
+		# SAVE PROCESSING TIME
+		nlm_elapsed <- proc.time() - nlm_start
+
+		# SAVE RUN WITH MINIMUM
+		nlm_res_t <- nlm_calls[[which.min(nlm_min)]]
+
+		if(print.progress){
+			cat('\n\tNumber of nlminb() calls: ', nlm_n, 
+				'\n\tTermination message: ', nlm_res_t$message, 
+				'\n\tMinimum: ', nlm_res_t$objective, 
+				'\n\tIterations: ', nlm_res_t$iterations, ' (', nlm.iter.max, ' max)', 
+				'\n\tFunction evaluations: ', nlm_res_t$evaluations['function'], ' (', nlm.eval.max, ' max)', 
+				'\n\tRun-time: ', nlm_elapsed[1], ' sec', 
+				'\n\tSum of absolute differences between initial and final parameters: ', sum(abs(start - nlm_res_t$par)), 
+				'\n\tEstimate: ', sep='');cat(round(nlm_res_t$par, 6), sep=', ')
+			cat('\n')
+		}
+
+		# SET FIXED PARAMETERS FOR NEXT ITERATION
+		p_fix <- nlm_res_t$par
+	}
 
 	# SAVE PROCESSING TIME
 	run_time <- proc.time() - ptm
 
-	if(print.progress){cat('\nTermination code:', nlm_res_t$code, '\nIterations:', nlm_res_t$iterations, '\nMinimum:', nlm_res_t$minimum, '\nRun-time:', run_time[1], 'sec\nSum of absolute differences between initial and final parameters:', sum(abs(c(p_init[, 2:ncol(p_init)]) - nlm_res_t$estimate)), '\nEstimate: ');cat(round(nlm_res_t$estimate, 6), sep=', ');cat('\n')}
+	if(print.progress) cat('\nTotal processing time: ', run_time[1], ' sec', sep='')
 
-	# ADD RUN-TIME AND ITERATIONS
-	run_time_t <- run_time_t + run_time[1]
-	
 	# SAVE OPTIMIZED PARAMETERS
-	p_init <- matrix(c(rep(0, 6), nlm_res_t$estimate), nrow=6)
+	p_init <- matrix(c(rep(0, 6), nlm_res_t$par), nrow=6)
 
 	# GET 3D COORDINATES BASED ON OPTIMIZED PARAMETERS
 	coor_3d_coeff <- transformPlanarCalibrationCoordinates(tpar=c(p_init), nx=nx, ny=ny, sx=grid.size)
@@ -132,9 +213,8 @@ dltCalibrateCameras <- function(coor.2d, nx, grid.size, c.run = FALSE, reduce.gr
 		mean.reconstruct.rmse=mean_reconstruct_rmse, 
 		coefficient.rmse=coefficient_rmse,
 		t.param.final=p_init,
-		t.iter=nlm_res_t$iterations,
-		t.min=nlm_res_t$minimum,
-		t.runtime=run_time_t,
+		t.min=nlm_res_t$objective,
+		t.runtime=run_time[1],
 		c.param.init=c(dlt_coefficients_t$cal.coeff),
 		c.param.final=nlm_res_c$estimate,
 		c.min=nlm_res_c$minimum,
@@ -152,7 +232,6 @@ summary.dltCalibrateCameras <- function(object, ...){
 
 	r <- c(r, '\tMinimize RMS Error by transformation\n')
 	r <- c(r, '\t\tTotal number of parameters estimated: ', length(object$t.param.final)-6, '\n')
-	r <- c(r, '\t\tTotal function calls: ', object$t.iter, '\n')
 	r <- c(r, '\t\tFinal Minimum Mean RMS Error: ', round(object$t.min, 3), '\n')
 	r <- c(r, '\t\tTotal Run-time: ', round(object$t.runtime, 2), ' sec\n')
 

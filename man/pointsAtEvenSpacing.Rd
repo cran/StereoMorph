@@ -53,8 +53,10 @@ lm.matrix <- readLandmarksToMatrix(paste0(fdir, "lm_3d_a2.txt"), row.names=1)
 pts <- na.omit(lm.matrix)
 r <- abs(apply(pts, 2, 'max') - apply(pts, 2, 'min'))
 
-## UNCOMMENT TO PLOT USING THE RGL PACKAGE
-# plot3d(pts, aspect=c(r[1]/r[3], r[2]/r[3], 1), size=0.5)
+\dontrun{
+## PLOT USING THE RGL PACKAGE
+plot3d(pts, aspect=c(r[1]/r[3], r[2]/r[3], 1), size=0.5)
+}
 
 ## CONVERT LANDMARKS TO LIST FORMAT TO EASILY ACCESS CURVE POINTS
 lm.list <- landmarkMatrixToList(lm.matrix)
@@ -68,6 +70,8 @@ lm.list$tomium_R <- pointsAtEvenSpacing(x=lm.list$tomium_R, n=15)
 ## CONVERT BACK TO MATRIX
 lm.matrix <- landmarkListToMatrix(lm.list)
 
-## UNCOMMENT TO PLOT NEW EVENLY SPACED POINTS WITH PREVIOUS POINTS
-# plot3d(lm.matrix, add=T, size=4, col='red')
+\dontrun{
+## PLOT NEW EVENLY SPACED POINTS WITH PREVIOUS POINTS
+plot3d(lm.matrix, add=T, size=4, col='red')
+}
 }

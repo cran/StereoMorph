@@ -4,13 +4,15 @@
 \description{
 This function fits a 12-parameter image perspective model to imaged grid points and uses the model parameters to produce a grid with the same transformations but consisting of fewer points, effectively "resampling" the number of grid points. In this way, fewer points (but representing the same amount of information) can be used in more computationally intensive steps such as camera calibration. This function is called by \code{\link{dltCalibrateCameras}}.}
 \usage{
-resampleGridImagePoints(pts, nx, rx, ry, print.progress = FALSE)
+resampleGridImagePoints(pts, nx, rx, ry, fit.min.break=1, 
+                        print.progress = FALSE)
 }
 \arguments{
   \item{pts}{a matrix of grid points from an image, such as the internal corners of a checkerboard image.}
   \item{nx}{the number of points along the first dimension (e.g. this would be the number of points in each row if points in \code{pts} are listed first by row).}
   \item{rx}{the re-sampled number of points along the first dimension (corresponding to \code{nx}).}
   \item{ry}{the re-sampled number of points along the second dimension (e.g. if \code{nx} is the number of points per row, this is the new number of points per column).}
+  \item{fit.min.break}{a minimum returned by \code{nlminb()} at which \code{resampleGridImagePoints()} will stop iterating to find a better fit.}
   \item{print.progress}{whether the model fit error should be printed. Error is in the same units as \code{pts}.}
 }
 \value{
@@ -37,14 +39,15 @@ ny <- 14
 
 ## READ THE GRID POINTS INTO A MATRIX
 ## OUTPUT OF FUNCTION IS AN ARRAY SO WE TAKE THE FIRST ENTRY TO GET MATRIX
-coor.2d <- readCheckerboardsToArray(file=file, nx=nx, ny=ny, col.reverse=TRUE)[, , 1]
+coor.2d <- as.matrix(read.table(file))
 
 ## RESAMPLE THE GRID WITH THE SAME NUMBER OF POINTS AS IN ORIGINAL
 coor_2d_same <- resampleGridImagePoints(pts=coor.2d, nx=nx, rx=21, ry=14, 
-  print.progress=TRUE)
+ print.progress=TRUE)
 
 ## RESAMPLE THE GRID WITH A REDUCED NUMBER OF POINTS (4 X 4)
-coor_2d_red <- resampleGridImagePoints(pts=coor.2d, nx=nx, rx=4, ry=4, print.progress=TRUE)
+coor_2d_red <- resampleGridImagePoints(pts=coor.2d, nx=nx, rx=4, ry=4, 
+ fit.min.break=1, print.progress=TRUE)
 
 ## PLOT THE ORIGINAL IMAGED POINTS
 plot(coor.2d)

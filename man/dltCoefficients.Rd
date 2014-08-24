@@ -36,7 +36,7 @@ For a general overview of DLT: \url{http://kwon3d.com/theory/dlt/dlt.html}
 \note{This function was modified by A Olsen from the Matlab function \code{dlt_reconstruct()} written by T Hedrick.
 }
 \seealso{
-\code{\link{dltCalibrateCameras}}
+\code{\link{dltCalibrateCameras}}, \code{\link{findCheckerboardCorners}}
 }
 \examples{
 ## SET NUMBER OF INTERNAL CORNERS AND ROWS

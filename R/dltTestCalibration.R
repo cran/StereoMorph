@@ -2,6 +2,11 @@ dltTestCalibration <- function(cal.coeff, coor.2d, nx, grid.size, epipolar.recip
 
 	if(length(dim(coor.2d)) == 3) coor.2d <- array(coor.2d, dim=c(dim(coor.2d)[1:2], 1, dim(coor.2d)[3]))
 
+	# REMOVE ANY SETS WITH NA
+	is_na <- apply(is.na(coor.2d), c(3, 4), 'sum')
+	is_na_rowsums <- rowSums(is_na)
+	coor.2d <- coor.2d[, , is_na_rowsums == 0, ]
+
 	# EMPTY VECTORS
 	ipd_error <- rep(NA, 0)
 	adj_pair_ipd_error <- rep(NA, 0)
@@ -125,7 +130,7 @@ summary.dltTestCalibration <- function(object, ...){
 	
 	r <- c(r, '\tNumber of grids: ', object$num.grids, '\n')
 	r <- c(r, '\tNumber of points: ', length(object$ipd.error), '\n')
-	r <- c(r, '\tAligned ideal to recontructed (AITR) point position errors:\n')
+	r <- c(r, '\tAligned ideal to reconstructed (AITR) point position errors:\n')
 	#r <- c(r, '\t\tAITR Mean Errors (X, Y, Z): ')
 	#r <- c(r, format(mean(object$aitr.error[, 1])))
 	#r <- c(r, ', ')

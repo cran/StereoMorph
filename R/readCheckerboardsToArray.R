@@ -1,7 +1,24 @@
 readCheckerboardsToArray <- function(file, nx, ny, col.reverse = FALSE, row.reverse = FALSE, na.omit=FALSE, ...){
 
+	# CHECK THAT FILE IS MATRIX
+	if(!is.matrix(file)) stop("'file' must be a matrix of file paths.")
+
+	# CREATE EMPTY ARRAY
+	coor <- array(NA, dim=c(nx*ny, 2, nrow(file), ncol(file)))
+
 	# READ LANDMARKS INTO COORDINATE ARRAY
-	coor <- readLandmarksToArray(file=file, na.omit=na.omit, ...)
+	for(i in 1:nrow(file)){
+		for(j in 1:ncol(file)){
+
+			if(!file.exists(file[i, j])) next
+		
+			read_table <- as.matrix(read.table(file[i, j], ...))
+		
+			if(nrow(read_table) != nx*ny) stop(paste0("Dimensions of data in file '", file[i, j], "' do not match input dimensions"))
+
+			coor[, , i, j] <- read_table
+		}
+	}
 
 	# IF SINGLE SET OF COORDINATES IS INPUT, MAKE SINGLE VALUE MATRIX FOR REVERSE ARRAY
 	if(length(dim(coor)) == 2) rev_dim <- c(1, 1)

@@ -25,9 +25,13 @@ digitizeImage <- function(image.file, landmarks.file=NULL, control.points.file=N
 	for(i in 1:length(img_file_split)) img_names[i] <- img_file_split[[i]][length(img_file_split[[i]])]
 
 	# IF ANY OF THE OUTPUT PATHS ARE DIRECTORIES, MAKE NAMES SAME AS IMAGE NAMES
-	if(!is.null(landmarks.file) && length(list.files(landmarks.file) > 0)) landmarks.file <- paste0(landmarks.file, '/', gsub('.[a-zA-Z]+$', '.txt', img_names))
-	if(!is.null(control.points.file) && length(list.files(control.points.file) > 0)) control.points.file <- paste0(control.points.file, '/', gsub('.[a-zA-Z]+$', '.txt', img_names))
-	if(!is.null(curve.points.file) && length(list.files(curve.points.file) > 0)) curve.points.file <- paste0(curve.points.file, '/', gsub('.[a-zA-Z]+$', '.txt', img_names))
+	if(sum(grepl('.txt$', landmarks.file)) != length(landmarks.file)) landmarks.file <- paste0(landmarks.file, '/', gsub('.[a-zA-Z]+$', '.txt', img_names))
+	if(sum(grepl('.txt$', control.points.file)) != length(control.points.file)) control.points.file <- paste0(control.points.file, '/', gsub('.[a-zA-Z]+$', '.txt', img_names))
+	if(sum(grepl('.txt$', curve.points.file)) != length(curve.points.file)) curve.points.file <- paste0(curve.points.file, '/', gsub('.[a-zA-Z]+$', '.txt', img_names))
+
+#	if(!is.null(landmarks.file) && length(list.files(landmarks.file) > 0)) landmarks.file <- paste0(landmarks.file, '/', gsub('.[a-zA-Z]+$', '.txt', img_names))
+#	if(!is.null(control.points.file) && length(list.files(control.points.file) > 0)) control.points.file <- paste0(control.points.file, '/', gsub('.[a-zA-Z]+$', '.txt', img_names))
+#	if(!is.null(curve.points.file) && length(list.files(curve.points.file) > 0)) curve.points.file <- paste0(curve.points.file, '/', gsub('.[a-zA-Z]+$', '.txt', img_names))
 
 	# CHECK THAT NUMBER OF IMAGES MATCHES OUTPUT PATHS IF NOT NULL
 	if(!is.null(landmarks.file) && length(image.file) != length(landmarks.file))
@@ -76,7 +80,7 @@ digitizeImage <- function(image.file, landmarks.file=NULL, control.points.file=N
 		init_params <- list()
 		init_params$app_dir <- app_dir
 		init_params$prev_wd <- getwd()
-		init_params$img_name <- img_names[img_num]
+		init_params$img_name <- gsub(" ", "_", img_names[img_num])
 		init_params$img_size <- file.info(image.file[img_num])$size
 		init_params$auto_advance <- auto.advance
 		init_params$img_file <- image.file[img_num]
@@ -105,7 +109,7 @@ digitizeImage <- function(image.file, landmarks.file=NULL, control.points.file=N
 		if(img_num > 1) init_params$prev_img <- TRUE
 
 		# COPY IMAGE TO WWW FOLDER
-		file.copy(image.file[img_num], paste0(app_dir, '/www/img/', img_names[img_num]))
+		file.copy(image.file[img_num], paste0(app_dir, '/www/img/', gsub(" ", "_", img_names[img_num])))
 
 		# READ IN CURRENT LANDMARKS
 		init_params$landmarks <- list()
@@ -169,7 +173,7 @@ digitizeImage <- function(image.file, landmarks.file=NULL, control.points.file=N
 		file.copy(paste0(app_dir, "/digitize_image_pre.html"), paste0(app_dir, "/digitize_image.html"), overwrite=TRUE)
 
 		# ADD IMAGE TAG TO HTML DOCUMENT (TO LOAD IMAGE AND GET SIZE)
-		img_tag <- paste0('\n<img style="display:none;" id="img1" src="img/', img_names[img_num],'" ></img>')
+		img_tag <- paste0('\n<img style="display:none;" id="img1" src="img/', gsub(" ", "_", img_names[img_num]),'" ></img>')
 		write(img_tag, file=paste0(app_dir, "/digitize_image.html"), append=TRUE)
 
 		# NOTIFICATION IN R CONSOLE

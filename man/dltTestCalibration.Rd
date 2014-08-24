@@ -62,7 +62,8 @@ For a general overview of DLT: \url{http://kwon3d.com/theory/dlt/dlt.html}
 \code{\link{dltCalibrateCameras}},
 \code{\link{dltCoefficients}},
 \code{\link{readCheckerboardsToArray}},
-\code{\link{dltEpipolarDistance}}
+\code{\link{dltEpipolarDistance}},
+\code{\link{findCheckerboardCorners}}
 }
 \examples{
 ## SET NUMBER OF INTERNAL ROWS AND COLUMNS
@@ -91,9 +92,11 @@ cal.coeff <- as.matrix(read.table(file=paste0(fdir, "cal_coeffs.txt")))
 dlt_test <- dltTestCalibration(cal.coeff=cal.coeff, coor.2d=coor.2d[, , 1:5, ], nx=nx, 
   grid.size=grid.size)
 
-## UNCOMMENT TO RUN TEST ON ALL TEST CALIBRATION IMAGES
-## dlt_test <- dltTestCalibration(cal.coeff=cal.coeff, coor.2d=coor.2d, nx=nx, 
-##   grid.size=grid.size)
+## RUN TEST ON ALL TEST CALIBRATION IMAGES
+\dontrun{
+dlt_test <- dltTestCalibration(cal.coeff=cal.coeff, coor.2d=coor.2d, nx=nx, 
+  grid.size=grid.size)
+}
 
 ## PRINT SUMMARY
 summary(dlt_test)
@@ -110,3 +113,4 @@ dev.new()
 plot(dlt_test$aitr.pos[, 1], abs(dlt_test$aitr.error[, 1]))
 }
 \keyword{ DLT }
+\keyword{ calibration }

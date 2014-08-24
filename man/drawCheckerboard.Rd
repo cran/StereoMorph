@@ -44,9 +44,10 @@ square.size <- 200
 ## WHERE TO SAVE THE FILE
 filename <- paste0("checkerboard_", nx, "_", ny, "_", square.size, ".jpeg")
 
+\dontrun{
 ## DRAW CHECKERBOARD
-## UNCOMMENT COMMAND BELOW TO RUN
 ## FILE WILL BE CREATED IN CURRENT WORKING DIRECTORY
-## drawCheckerboard(nx=nx, ny=ny, square.size=square.size, filename=filename)
+drawCheckerboard(nx=nx, ny=ny, square.size=square.size, filename=filename)
+}
 }
 \keyword{ grid functions }

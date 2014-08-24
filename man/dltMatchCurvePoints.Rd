@@ -2,12 +2,13 @@
 \alias{dltMatchCurvePoints}
 \alias{summary.dltMatchCurvePoints}
 \alias{print.summary.dltMatchCurvePoints}
-\title{Matches curve points between two cameras}
+\title{Matches curve points between two camera views}
 \description{This function uses DLT calibration coefficients to find corresponding points along a curve viewed from two different cameras in stereo camera setup.
 }
 \usage{
 dltMatchCurvePoints(lm.list, cal.coeff, ref.view = "max", window.size = 30, 
-                    min.tangency.angle = 0.1)
+                    min.tangency.angle = 0.1, min.dist.adj.slope = 0.1, 
+                    plot.match = FALSE)
 
 \method{summary}{dltMatchCurvePoints}(object, ...)
 }
@@ -17,6 +18,8 @@ dltMatchCurvePoints(lm.list, cal.coeff, ref.view = "max", window.size = 30,
   \item{ref.view}{which of the two views to use as a reference. Possible values are \code{1}, \code{2}, \code{"max"} and \code{"min"}.}
   \item{window.size}{the number of curve points to consider in each corresponding point search.}
   \item{min.tangency.angle}{a threshold for which parts of the curve should not be matched because they are nearly parallel to the epipolar line. See "Details".}
+  \item{min.dist.adj.slope}{a threshold for which parts of the curve should not be matched because a point is not clearly the best match in comparison with neighboring points.}
+  \item{plot.match}{a logical indicating whether a plot should be drawn showing the point matches between two curves. This is not optimized for visualization and might not always provide the best view of the matching results.}
   \item{object}{a list of class \code{"dltMatchCurvePoints"} (the output of \code{dltMatchCurvePoints()}).}
   \item{...}{further arguments passed to or from other methods.}
 }
@@ -35,7 +38,9 @@ The curve points chosen as the reference are used to generate epipolar lines in 
 
 As \code{dltMatchCurvePoints()} steps through each point on the reference curve, it searches for the closest point on the epipolar line to the second curve. Rather than search for the closest point among all of the second curve points, \code{dltMatchCurvePoints()} only searches over a sliding window of points. \code{window.size} is the number of curve points considered at each iteration in identifying the corresponding point. A lower \code{window.size} will decrease the run-time but will potentially cause the function to miss corresponding points. If \code{curve.pt.dist} values are low, the current \code{window.size} is probably appropriate. \code{window.size} can be increased if \code{curve.pt.dist} values are high (over several pixels).
 
-When the epipolar line is nearly parallel to the curve in the non-reference view, several points are equally likely to be the corresponding point and determining the actual corresponding point is impossible without additional information. These points can be made \code{NA} by setting the parameter \code{min.tangency.angle} to a value greater than zero. Whenever the angle between the epipolar line and the non-reference curve (in radians) is less than \code{min.tangency.angle}, the corresponding point is set to \code{NA}.
+When the epipolar line is nearly parallel to the curve in the non-reference view, several points are equally likely to be the corresponding point and determining the actual corresponding point is impossible without additional information. The angle between the epipolar line and the points on the non-reference curve is referred to here as the tangency angle. When the tangency angle for points on the non-reference curve is less than \code{min.tangency.angle}, the current reference point is skipped. Additionally, when the points near a point on the non-reference curve are also very close to the epipolar line, a wrong match is more likely. Within the window of candidate points, the distance from each point to the epipolar line is calculated. The slope of these distances away from the point closest to the epipolar line (the minimum distance) is referred to here as the adjacent point distance slope. When the adjacent point distance slope is lower, the confidence that the minimum distance point is the correct match decreases. When this adjacent point distance slope is less than \code{min.dist.adj.slope}, the current reference point is skipped. The \code{min.tangency.angle} and \code{min.dist.adj.slope} are similar criteria, however the \code{min.dist.adj.slope} might provide more robust results with more irregular curves. Users might need to increase one or both of these values to obtain satisfactory results.
+
+When reference points are skipped, these are filled in at the end with straight lines extending between defined points to either side of the skipped regions. Straight lines are used because these regions are likely to be nearly linear, owing to their minimal deviation from the epipolar line.
 
 In addition to returning \code{match.lm.list}, \code{dltMatchCurvePoints()} also returns two vectors (or lists of vectors, depending on the format of \code{lm.list}) that can be used to assess the accuracy of the curve point matching. \code{epipolar.dist} is the epipolar distance between the epipolar line of the reference point and the corresponding point in the non-reference view. The first and last point are assumed to correspond, so there will be some epipolar error for these points. The remaining points are chosen on the epipolar line of the reference point, so their epipolar error will be zero. Future implementations may allow users to specify that corresponding points be on the curve in the second view and not necessarily on the epipolar line, in which case \code{epipolar.dist} will become more relevant. \code{curve.pt.dist} is the distance between the epipolar line and the nearest point on the curve in the second view for each curve point. If the exact same curve has been digitized in the two views, \code{curve.pt.dist} should be low (within a pixel or less).
 
@@ -58,7 +63,6 @@ For a general overview of DLT: \url{http://kwon3d.com/theory/dlt/dlt.html}
 \code{\link{readLandmarksToList}},
 \code{\link{dltEpipolarLine}}, 
 \code{\link{dltEpipolarDistance}}, 
-
 \code{\link{dltNearestPointOnEpipolar}}
 }
 \examples{
