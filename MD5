@@ -1,4 +1,4 @@
-c3bac89b02f25bf4fe620c28c873c33a *DESCRIPTION
+b8a167dda4fe671bafa07cb475e6a523 *DESCRIPTION
 42c147ac6cc399f8158b8a2e6065c24c *NAMESPACE
 ed643c5efc13791c1c152b47acd28925 *R/RcppExports.R
 e528cee5c011c25e34ceb7de7f4e956d *R/alignLandmarksToMidline.R
@@ -126,7 +126,7 @@ d80b10fa2d75c5a2ff2923d5c9012c44 *inst/extdata/test_cal_a7_v2.txt
 6d612b859b346ea6eb37ede6c78ea646 *inst/extdata/test_cal_a8_v2.txt
 27a6a46230063c77b6f64c6d1be6d2c5 *inst/extdata/test_cal_a9_v1.txt
 d2bea19ba68bc097256edc7574895178 *inst/extdata/test_cal_a9_v2.txt
-8858b0fc1e08755183d4360d7019e955 *man/StereoMorph-package.Rd
+517dd17d0be3bf15fecf7c6568e37055 *man/StereoMorph-package.Rd
 7dbe82be53ffaa48e62fb85dfc11f709 *man/alignLandmarksToMidline.Rd
 5274e10b78658e04d28350d8905771aa *man/avectors.Rd
 5b2f07eca1f09a7cb858ad7b5d406ff4 *man/cprod.Rd
@@ -170,13 +170,13 @@ a91c7e9f1f3254aa2ab216986494a2c0 *man/rotationMatrixZYX.Rd
 e0cee5ac2577bead3e8942c8b9f56108 *src/Makevars
 7c1289da537f0cab22f3538eb0a1fde6 *src/Makevars.win
 35a57e89de8cfd26d30f8645a68c8902 *src/RcppExports.cpp
-df85d1e70e4b547a983fd65d8319b4ba *src/dilateImage.cpp
+081de2b1cfe1a6cc511c11fd255c8494 *src/dilateImage.cpp
 181e1067bc35552e7d49e7a27e250043 *src/drawRectangle.cpp
 1d46659e5c32913ad6b47ff3887d035c *src/equalizeImageHist.cpp
-4a805b09a9c52a5eaf279858584747a0 *src/erodeImage.cpp
+961b99a1751cd78e997f249f0b09dc8e *src/erodeImage.cpp
 75960d873cd03af4ac567cf2884bd2e7 *src/findBoundaryPoints.cpp
-29b07b2cb317a0f9f94ef219386b225f *src/findCornerSubPix.cpp
-3a78aa6b5f816163bfd81a5017546393 *src/generateQuads.cpp
-759c89082a99d1e41e8ef380113919ab *src/meanBlurImage.cpp
+be4008e593bebeeecbe0a5566d44a855 *src/findCornerSubPix.cpp
+553fb9727a8c436ec68e50a84c76aefc *src/generateQuads.cpp
+1b94b71dc37bd973b8488306aac5be8b *src/meanBlurImage.cpp
 416c092a3a60845939d409e7ac199e18 *src/rgbToGray.cpp
 c72c2a2d59ada200ea2c8422490a971d *src/thresholdImageMatrix.cpp
