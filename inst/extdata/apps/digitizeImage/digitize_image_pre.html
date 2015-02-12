@@ -16,16 +16,20 @@
 			</div>
 			<div class='view_digitize_options_container'  >
 				<div  class='view_digitize_options_links' style='width:300px;' >
-					<div class='view_digitize_options' id='vis_control_vdo_info' onClick="javascript:selectStyle(this,'bold');selectStyle(this,'backgroundColor','orange');createCookie('vis_control_vdo','info');filterViewEntries(this,'info',2);" >Info</div>
+					<div class='view_digitize_options' id='vis_control_vdo_settings' onClick="javascript:selectStyle(this,'bold');selectStyle(this,'backgroundColor','orange');createCookie('vis_control_vdo','settings');filterViewEntries(this,'settings',2);" >Settings</div>
 					<div class='view_digitize_options' id='vis_control_vdo_collect_landmarks' onClick="javascript:selectStyle(this,'bold');selectStyle(this,'backgroundColor','orange');createCookie('vis_control_vdo','collect_landmarks');filterViewEntries(this,'collect_landmarks',2);" >Landmarks</div>
 					<div class='view_digitize_options' id='vis_control_vdo_collect_curves' onClick="javascript:selectStyle(this,'bold');selectStyle(this,'backgroundColor','orange');createCookie('vis_control_vdo','collect_curves');filterViewEntries(this,'collect_curves',2);" >Curves</div>
 				</div>
 				<div class='digitize_options_container' style='' >
-					<div id='info' class='landmark_control_panel_view_entries'  >
-						<div id='info' class='image_info_div'  >
-							<p><b>Image name:</b> <span id='image_name' class='image_info' ></span></p>
-							<p><b>Image dimensions:</b> <span id='image_dimensions' class='image_info' ></span></p>
-							<p><b>Image size:</b> <span id='image_size' class='image_info' ></span></p>
+					<div id='settings' class='landmark_control_panel_view_entries'  >
+						<div class='image_settings_header' ></div>
+						<div id='settings' class='image_settings_div'  >
+							<p><b>Image Series Settings</b></p>
+							<input id="copy_landmarks_checkbox" type="checkbox" value="1" onclick="javascript:setSettings(this);" > Copy landmarks to next image<br>
+							<input id="copy_curves_checkbox" type="checkbox" value="1" onclick="javascript:setSettings(this);" > Copy curves to next image<br>
+							<p><b>Image name:</b> <span id='image_name' class='image_settings' ></span></p>
+							<p><b>Image dimensions:</b> <span id='image_dimensions' class='image_settings' ></span></p>
+							<p><b>Image size:</b> <span id='image_size' class='image_settings' ></span></p>
 						</div>
 					</div>
 					<div id='collect_landmarks' class='landmark_control_panel_view_entries'  >

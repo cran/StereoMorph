@@ -53,8 +53,14 @@ a.help{
 	color:blue;
 }
 
-div.image_info_div{
+div.image_settings_div{
 	padding:5px;
+	background-color:;
+}
+
+div.image_settings_header{
+	height:18px;
+	background-color:orange;
 }
 
 div.semilandmark_point_col{
@@ -123,7 +129,7 @@ div.landmark_control_panel_view_entries{
 	float:left;
 	display:;
 	border:2px solid orange;
-	background-color:white;
+	background-color:#ffdd90;
 	padding:0px;
 }
 
@@ -249,7 +255,7 @@ span.status_updates{
 	margin-top:7px;
 }
 
-span.image_info{
+span.image_settings{
 }
 
 div.submit_links_button{

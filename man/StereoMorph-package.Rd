@@ -16,6 +16,8 @@
 \alias{orderCorners}
 \alias{rgbToGray}
 \alias{thresholdImageMatrix}
+\alias{inverseGridTransform}
+\alias{dltCCEstimateStartParams}
 
 \docType{package}
 \title{Stereo Camera Morphometrics}
@@ -26,8 +28,8 @@
 \tabular{ll}{
 Package: \tab StereoMorph\cr
 Type: \tab Package\cr
-Version: \tab 1.2.1\cr
-Date: \tab 2014-09-01\cr
+Version: \tab 1.3\cr
+Date: \tab 2015-02-11\cr
 License: \tab GPL-2\cr
 }
 }

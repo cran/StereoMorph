@@ -8,7 +8,7 @@
 			<h1>StereoMorph Digitizing Application Help</h1>
 			<h2>Contents</h2>
 			<p>
-			Last updated: July 17, 2014
+			Last updated: February 6, 2015
 			</p>
 		</div>
 		<div id='top' style='margin:20px 20px 70px 50px;' >
@@ -20,6 +20,7 @@
 				<li><a href="#uploading_landmark_files">Uploading and saving to landmark files</a></li>
 				<li><a href="#uploading_curve_files">Uploading and saving to curve files</a></li>
 				<li><a href="#uploading_landmarks_and_curves">Uploading and saving landmarks and curves</a></li>
+				<li><a href="#image_compatibilities">Image compatibilities</a></li>
 			</ul>			
 			<h3>Using the App</h3>
 			<ul>
@@ -35,6 +36,7 @@
 				<li><a href="#modifying_curves">Modifying curves</a></li>
 				<li><a href="#deleting_curves">Deleting curves</a></li>
 				<li><a href="#control_versus_curve_points">Control points versus curve points</a></li>
+				<li><a href="#copying_shapes_between_images">Copying landmarks and curves between images</a></li>
 				<li><a href="#resizing_the_window">Resizing the browser window</a></li>
 				<li><a href="#auto_advance">Turning on/off auto-advance</a></li>
 				<li><a href="#moving_between_images">Moving between images</a></li>
@@ -44,7 +46,7 @@
 			R code examples in this help file are taken from the
 			<a href="http://stereomorph.blogspot.com/p/stereomorph-10-step-tutorial.html" target="_blank" >StereoMorph Tutorial</a>.
 			In order to run these examples, download the
-			<a href="http://home.uchicago.edu/~aolsen/StereoMorph/StereoMorph%20Tutorial.zip" target="_blank" >StereoMorph Tutorial folder</a>,
+			<a href="https://github.com/aaronolsen/StereoMorph/blob/master/Tutorial%20Files.zip" target="_blank" >StereoMorph Tutorial folder</a>,
 			make this folder the current working directory in R and loaded the StereoMorph library.
 			For more information, please see
 			<a href="http://stereomorph.blogspot.com/2014/08/digitizing-photographs.html" target="_blank" >Digitizing with StereoMorph</a>.			
@@ -347,6 +349,15 @@
 			To save landmarks, control points and curve points, click "Submit All" in the control panel.
 			</p>
 		</div>
+		<div id='image_compatibilities' style='margin:20px 20px 40px 50px;' >
+			<div style="float:right;" ><a href="#top">To top</a></div>
+			<h4>Image compatibilities</h4>
+			<p>
+			Images can only be digitized if the image type is compatible with the browser being used (the user's default browser).
+			JPEG and PNG are widely supported image types - they will load in all the browsers with which the digitizing application is compatible.
+			TIFF images can only be digitized in Safari.
+			</p>
+		</div>
 
 
 
@@ -625,6 +636,22 @@
 			is not input into
 			<span style="font-family:courier;font-size:1em;">digitizeImage()</span> 
 			the single-pixel spaced curve points are not generated and only the control points are saved.
+			</p>
+		</div>
+		<div id='copying_shapes_between_images' style='margin:20px 20px 40px 50px;' >
+			<div style="float:right;" ><a href="#top">To top</a></div>
+			<h4>Copying landmarks and curves between images</h4>
+			<p>
+			When digitizing a series of images with landmarks or curves in similar positions from one image to the next, it is often useful 
+			to copy landmarks and curves digitized in one image to the next image. In this way, landmarks and curve points need only 
+			be adjusted slightly in subsequent images. To do this, click on the "Settings" tab and check the box next to 
+			"Copy landmarks to next image" or "Copy curves to next image". The next image refers to the image loaded after the current image, 
+			regardless of whether the image is reached by clicking "Previous Image" or "Next Image". 
+			Landmarks and curves will only be copied to the subsequent image
+			if they are saved for the current image and if landmarks and curves are not already digitized for the subsequent image.
+			Additionally, any copied landmarks or curves are not automatically saved for the image on to which they are copied; 
+			they must be saved by clicking "Submit". A warning message will appear if users try to leave the current image without submitting
+			copied landmarks and curves.
 			</p>
 		</div>
 		<div id='resizing_the_window' style='margin:20px 20px 40px 50px;' >

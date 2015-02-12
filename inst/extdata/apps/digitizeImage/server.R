@@ -89,15 +89,21 @@ shinyServer(function(input, output) {
 
 				update_status <- paste0(update_status, length(json_list$control_points), " curve", plural, " saved ", curve_save_status, ". ")
 			}
+			
+			# SAVE SETTINGS
+			settings <- list(
+				'copy_landmarks' = json_list$copy_landmarks,
+				'copy_curves' = json_list$copy_curves
+			)
 
 			# DETECT IMAGE CHANGE
 			if(!is.null(json_list$change_image)){
-				if(json_list$change_image == 1) stopApp('next')
-				if(json_list$change_image == -1) stopApp('prev')
+				if(json_list$change_image == 1) stopApp(list('next.command'='next', 'settings'=settings))
+				if(json_list$change_image == -1) stopApp(list('next.command'='prev', 'settings'=settings))
 			}
 
 			# DETECT EXIT
-			if(!is.null(json_list$exit)) stopApp('exit')
+			if(!is.null(json_list$exit)) stopApp(list('next.command'='exit', 'settings'=settings))
 
 		# INITIAL INPUT FROM R
 		}

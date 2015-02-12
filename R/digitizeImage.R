@@ -7,7 +7,7 @@ digitizeImage <- function(image.file, landmarks.file=NULL, control.points.file=N
 
 	# GET STEREOMORPH SHINY APP DIRECTORY
 	app_dir <- paste0(path.package("StereoMorph"), '/extdata/apps/digitizeImage')
-	#app_dir  <- "/Applications/XAMPP/xamppfiles/htdocs/data_analysis/r_package_development/StereoMorph/inst/extdata/apps/digitizeImage"
+	#app_dir  <- "/Users/aaron/Documents/Research/R Package Tests/StereoMorph/Digitizing App/extdata/apps/digitizeImage"
 
 	# REMOVE ANY IMAGE FILES IN IMG FOLDER
 	if(length(list.files(paste0(app_dir, '/www/img/'))) > 0)
@@ -73,7 +73,13 @@ digitizeImage <- function(image.file, landmarks.file=NULL, control.points.file=N
 		landmarks_ref <- c(landmarks_ref, landmarks_from_curves_ref)
 	}
 
-	img_num <- 1
+	# SET INITIAL SETTINGS
+	run_app <- list('settings'=list(
+		'copy_landmarks'=FALSE,
+		'copy_curves'=FALSE
+	))
+
+	img_num <- prev_img_num <- 1
 	while(img_num <= length(image.file)){
 
 		# SET INITIAL PARAMETERS
@@ -101,6 +107,8 @@ digitizeImage <- function(image.file, landmarks.file=NULL, control.points.file=N
 		init_params$marker_stroke_width <- marker.stroke.width
 		init_params$landmarks_ref <- landmarks_ref
 		init_params$curves_ref <- curves_ref
+		init_params$unsaved_landmarks <- FALSE
+		init_params$unsaved_curves <- FALSE
 
 		# SET WHETHER PREVIOUS OR CURRENT IMAGES EXIST
 		init_params$prev_img <- FALSE
@@ -113,19 +121,30 @@ digitizeImage <- function(image.file, landmarks.file=NULL, control.points.file=N
 
 		# READ IN CURRENT LANDMARKS
 		init_params$landmarks <- list()
-		if(!is.null(landmarks.file) && file.exists(landmarks.file[img_num]) && file.info(landmarks.file[img_num])$size > 1){
-			landmarks <- as.matrix(read.table(landmarks.file[img_num], row.names=1, sep="\t"))
+		landmark_img_num <- img_num
+		if(!is.null(landmarks.file) && file.exists(landmarks.file[img_num]) && file.info(landmarks.file[img_num])$size > 1){}else{
+			if(run_app$settings$copy_landmarks) landmark_img_num <- prev_img_num
+		}
+
+		if(!is.null(landmarks.file) && file.exists(landmarks.file[landmark_img_num]) && file.info(landmarks.file[landmark_img_num])$size > 1){
+			landmarks <- as.matrix(read.table(landmarks.file[landmark_img_num], row.names=1, sep="\t"))
 			colnames(landmarks) <- NULL
 			for(i in 1:nrow(landmarks)) init_params$landmarks[[i]] <- c(rownames(landmarks)[i], landmarks[i, ])
+			if(img_num != landmark_img_num) init_params$unsaved_landmarks <- TRUE
 		}
 
 		# READ IN CURRENT CONTROL POINTS	
 		init_params$control_points <- list()
-		if(!is.null(control.points.file) && file.exists(control.points.file[img_num]) && file.info(control.points.file[img_num])$size > 1){
-			control_points <- readBezierControlPoints(control.points.file[img_num])
+		curve_img_num <- img_num
+		if(!is.null(control.points.file) && file.exists(control.points.file[img_num]) && file.info(control.points.file[img_num])$size > 1){}else{
+			if(run_app$settings$copy_curves) curve_img_num <- prev_img_num
+		}
+		if(!is.null(control.points.file) && file.exists(control.points.file[curve_img_num]) && file.info(control.points.file[curve_img_num])$size > 1){
+			control_points <- readBezierControlPoints(control.points.file[curve_img_num])
 			for(i in 1:length(control_points)){
 				init_params$control_points[[i]] <- c(names(control_points)[i], c(t(control_points[[names(control_points)[i]]][[1]])))
 			}
+			if(img_num != curve_img_num) init_params$unsaved_curves <- TRUE
 		}
 
 		# CONVERT PARAMETERS INTO STRING FOR R TO READ
@@ -177,7 +196,10 @@ digitizeImage <- function(image.file, landmarks.file=NULL, control.points.file=N
 		write(img_tag, file=paste0(app_dir, "/digitize_image.html"), append=TRUE)
 
 		# NOTIFICATION IN R CONSOLE
-		cat(paste0("Loading image '", img_names[img_num], "'\n"))
+		cat(paste0("Loading image '", img_names[img_num], "'"))
+
+		# SAVE CURRENT IMAGE NUMBER
+		prev_img_num <- img_num
 
 		# INITIATE SHINY APP
 		#run_app <- runApp(app_dir, port = NULL, host = "127.0.0.1", launch.browser = TRUE, display.mode = "auto")
@@ -189,9 +211,9 @@ digitizeImage <- function(image.file, landmarks.file=NULL, control.points.file=N
 			file.remove(paste0(app_dir, '/www/img/', list.files(paste0(app_dir, '/www/img/'))))
 
 		# DETERMINE WHETHER TO CHANGE IMAGE OR QUIT
-		if(run_app == 'next'){
+		if(run_app$next.command == 'next'){
 			img_num <- img_num + 1
-		}else if (run_app == 'prev'){
+		}else if (run_app$next.command == 'prev'){
 			img_num <- img_num - 1
 		}else{			
 			return(NULL)

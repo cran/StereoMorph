@@ -32,13 +32,11 @@ var svgns = "http://www.w3.org/2000/svg";
 var zoom_d = 1;
 var last_p_pos;
 var p_pos;
-var unsaved_landmarks = false;
-var unsaved_curves = false;
 
 function addCurvePoint(x,y){
 	if(current_curve_point == "NA"){return;}
 
-	unsaved_curves = true;
+	unsaved_curves = 'TRUE';
 
 	var i;
 
@@ -161,7 +159,7 @@ function addCurvePointField(block_num, point_num){
 function addLandmark(x,y){
 	if(current_landmark == "NA") return;
 
-	unsaved_landmarks = true;
+	unsaved_landmarks = 'TRUE';
 
 	var num = current_landmark;
 	var lm_x_div = document.getElementById('landmark_col_x_' + num);
@@ -258,11 +256,11 @@ function changeCurrentMarker(d){
 function changeImage(adv){
 
 	var answer = true;
-	if(unsaved_landmarks && unsaved_curves){
+	if(unsaved_landmarks == 'TRUE' && unsaved_curves == 'TRUE'){
 		answer = confirm ("You have unsaved landmarks and curves. Would you still like to leave this image?")
 	}else{
-		if(unsaved_landmarks) answer = confirm ("You have unsaved landmarks. Would you still like to leave this image?")
-		if(unsaved_curves) answer = confirm ("You have unsaved curves. Would you still like to leave this image?")
+		if(unsaved_landmarks == 'TRUE') answer = confirm ("You have unsaved landmarks. Would you still like to leave this image?")
+		if(unsaved_curves == 'TRUE') answer = confirm ("You have unsaved curves. Would you still like to leave this image?")
 	}
 
 	if(answer){
@@ -371,7 +369,7 @@ function deleteMarker(){
 		lm_x_div.innerHTML = "-";
 		lm_y_div.innerHTML = "-";
 
-		unsaved_landmarks = true;
+		unsaved_landmarks = 'TRUE';
 	}
 	if(current_curve_point !== "NA"){
 		var num = current_curve_point;
@@ -455,7 +453,7 @@ function deleteMarker(){
 				}
 			}
 		}
-		unsaved_curves = true;
+		unsaved_curves = 'TRUE';
 	}
 }
 
@@ -599,11 +597,11 @@ function drawMarker(id,num,x,y){
 function exit(){
 
 	var answer = true;
-	if(unsaved_landmarks && unsaved_curves){
+	if(unsaved_landmarks == 'TRUE' && unsaved_curves == 'TRUE'){
 		answer = confirm ("You have unsaved landmarks and curves. Would you still like to exit?")
 	}else{
-		if(unsaved_landmarks) answer = confirm ("You have unsaved landmarks. Would you still like to exit?")
-		if(unsaved_curves) answer = confirm ("You have unsaved curves. Would you still like to exit?")
+		if(unsaved_landmarks == 'TRUE') answer = confirm ("You have unsaved landmarks. Would you still like to exit?")
+		if(unsaved_curves == 'TRUE') answer = confirm ("You have unsaved curves. Would you still like to exit?")
 	}
 
 	if(answer){
@@ -1109,6 +1107,8 @@ function onLoadFunctions(evt){
 	browser_name = get_browser_name[0];
 	browser_version = get_browser_name[1];
 
+	setSettings();
+
 	// GET JSON STRING FROM R
 	var json_string = document.getElementById('text_input').value
 
@@ -1161,10 +1161,12 @@ function onLoadFunctions(evt){
 	landmark_radius = init_params.landmark_radius
 	control_point_radius = init_params.control_point_radius
 	marker_stroke_width = init_params.marker_stroke_width
+	unsaved_curves = init_params.unsaved_curves
+	unsaved_landmarks = init_params.unsaved_landmarks
 
 	updateSubmitButtons();
 
-	// Fill in image info
+	// Fill in image settings
 	document.getElementById("image_name").innerHTML = init_params.img_name;
 	document.getElementById("image_dimensions").innerHTML = 
 		document.getElementById('img1').naturalWidth + ' x ' + document.getElementById('img1').naturalHeight + ' px';
@@ -1554,10 +1556,37 @@ function setEvents(e) {
 	document['on'+this.id] = eventHandler;
 }
 
+function setSettings(name){
+
+	// UPDATE FORM ELEMENTS ON PAGE TO MATCH COOKIE VALUES
+	if(!name){
+
+		if(getCookie('copy_landmarks_checkbox') == 'T') document.getElementById('copy_landmarks_checkbox').checked = true;
+		if(getCookie('copy_curves_checkbox') == 'T') document.getElementById('copy_curves_checkbox').checked = true;
+
+		return
+	}
+
+	// UPDATE COOKIE VALUES TO MATCH USER SELECTIONS
+	if(name.id == 'copy_landmarks_checkbox' || name.id == 'copy_curves_checkbox'){
+	
+		// SET VALUE
+		if(document.getElementById(name.id).checked){value = 'T'}else{value = 'F'}
+
+		// CREATE COOKIE
+		createCookie(name.id, value)
+	}
+
+}
+
 function submit(submit_params){
 
 	// ADD FROM BROWSER TAG TO DISTINGUISH FROM INITIAL RUN
 	submit_params.fromBrowser = true;
+
+	// ADD SETTINGS
+	submit_params.copy_landmarks = document.getElementById('copy_landmarks_checkbox').checked;
+	submit_params.copy_curves = document.getElementById('copy_curves_checkbox').checked;
 
 	// ADD SECONDS SO THAT SERVER RECOGNIZES NEW INPUT
 	var seconds = new Date().getTime() / 1000;
@@ -1597,7 +1626,7 @@ function submitShapes(what){
 		}
 
 		submit_params.submit_landmarks = true;
-		unsaved_landmarks = false;
+		unsaved_landmarks = 'FALSE';
 	}
 	if(what == 'curves' || what == 'all'){
 		submit_params.control_points = [];
@@ -1635,7 +1664,7 @@ function submitShapes(what){
 		}
 
 		submit_params.submit_curves = true;
-		unsaved_curves = false;
+		unsaved_curves = 'FALSE';
 	}	
 	
 	submit(submit_params);
