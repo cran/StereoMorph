@@ -8,10 +8,25 @@
 			<h1>StereoMorph Digitizing Application Help</h1>
 			<h2>Contents</h2>
 			<p>
-			Last updated: February 6, 2015
+			Last updated: March 6, 2015
 			</p>
 		</div>
 		<div id='top' style='margin:20px 20px 70px 50px;' >
+			<p>
+			**I am currently in the process of updating the StereoMorph digitizing application to 
+			include more features and provide a more user-friendly experience.
+			Users can now save all data for an image in a single file (a shapes file) that can be read by 
+			the R function <span style="font-family:courier;font-size:1em;">readShapes()</span>.
+			But the app is still compatible with the older method of saving landmarks and curves separately without any scaling applied. 
+			Until all of the updates are completed (hopefully by the Northern Hemisphere summer of 2015...) 
+			the examples in this help document correspond mostly to the older format. 
+			All of the new features will eventually be added to this reference.
+			Please refer to the 
+			<a href="http://home.uchicago.edu/~aolsen/software/stereomorph/StereoMorph%20Digitizing%20Tutorial.pdf" target="_blank" >StereoMorph Digitizing App Tutorial</a> 
+			for instructions on how to make use of the newest features of the app, including scaling using a ruler or checkerboard pattern. 
+			Thank you for your patience as I make these improvements!**
+			</p>
+
 			<h3>Opening the App</h3>
 			<ul>
 				<li><a href="#uploading_images">Uploading an image or images to the app</a></li>
@@ -20,6 +35,7 @@
 				<li><a href="#uploading_landmark_files">Uploading and saving to landmark files</a></li>
 				<li><a href="#uploading_curve_files">Uploading and saving to curve files</a></li>
 				<li><a href="#uploading_landmarks_and_curves">Uploading and saving landmarks and curves</a></li>
+				<li><a href="#uploading_shapes">Uploading and saving a shapes file</a></li>
 				<li><a href="#image_compatibilities">Image compatibilities</a></li>
 			</ul>			
 			<h3>Using the App</h3>
@@ -38,7 +54,6 @@
 				<li><a href="#control_versus_curve_points">Control points versus curve points</a></li>
 				<li><a href="#copying_shapes_between_images">Copying landmarks and curves between images</a></li>
 				<li><a href="#resizing_the_window">Resizing the browser window</a></li>
-				<li><a href="#auto_advance">Turning on/off auto-advance</a></li>
 				<li><a href="#moving_between_images">Moving between images</a></li>
 				<li><a href="#browser_compatibility">Browser compatibility</a></li>
 			</ul>
@@ -349,6 +364,20 @@
 			To save landmarks, control points and curve points, click "Submit All" in the control panel.
 			</p>
 		</div>
+		<div id='uploading_shapes' style='margin:20px 20px 40px 50px;' >
+			<div style="float:right;" ><a href="#top">To top</a></div>
+			<h4>Uploading and saving a shapes file</h4>
+			<p>
+			This is a new file format for the digitizing app that allows users to save all data associated with the image 
+			(scaling and shape data) in a single file that can be read by the R function 
+			<span style="font-family:courier;font-size:1em;">readShapes()</span>.
+			Please refer to the 
+			<a href="http://home.uchicago.edu/~aolsen/software/stereomorph/StereoMorph%20Digitizing%20App%20Tutorial.pdf" target="_blank" >StereoMorph Digitizing App Tutorial</a> 
+			for instructions on how to upload and save using the shapes file format. 
+			</p>
+			
+		</div>
+
 		<div id='image_compatibilities' style='margin:20px 20px 40px 50px;' >
 			<div style="float:right;" ><a href="#top">To top</a></div>
 			<h4>Image compatibilities</h4>
@@ -374,8 +403,6 @@
 					<td>Select previous marker</td></tr>
 				<tr valign='top' ><td style="width:170px;" ><strong>d</strong></td>
 					<td>Delete a selected marker</td></tr>
-				<tr valign='top' ><td style="width:170px;" ><strong>shift + a</strong></td>
-					<td>Turn on/off auto-advance</td></tr>
 				<tr valign='top' ><td style="width:170px;" ><strong>double-click</strong></td>
 					<td>Add a marker, re-position a marker, select/unselect marker</td></tr>
 				<tr valign='top' ><td style="width:170px;" ><strong>scroll over image</strong></td>
@@ -443,8 +470,7 @@
 			Note that if your cursor is positioned near or over another landmark, this will cause that landmark to be selected
 			rather than creating a new one.
 			If auto-advance is on, once you add a new landmark it will automatically advance to the next landmark.
-			You can turn auto-advance on and off by holding down shift and pressing 'a' or (initially) via the input parameters to 
-			<span style="font-family:courier;font-size:1em;">digitizeImage()</span>.
+			You can turn auto-advance on and off by clicking the checkbox in the "Settings" panel.
 			</p>
 		</div>
 		<div id='selecting_landmarks' style='margin:20px 20px 40px 50px;' >
@@ -674,11 +700,7 @@
 			<span style="font-family:courier;font-size:1em;">landmarks.ref</span>.
 			Thus, the input order can be made to match the distribution of points on the object to advance through the landmarks
 			most efficiently.
-			To turn auto-advance on and off, mark the
-			<span style="font-family:courier;font-size:1em;">auto.advance</span> parameter as either 
-			<span style="font-family:courier;font-size:1em;">TRUE</span> or <span style="font-family:courier;font-size:1em;">FALSE</span>
-			when calling <span style="font-family:courier;font-size:1em;">digitizeImage()</span>.
-			Once the application has loaded, auto-advance can be turned on and off by holding down the shift key and pressing 'a'.
+			To turn auto-advance on and off, click on the corresponding checkbox in the "Settings" panel.
 			</p>
 		</div>
 		<div id='moving_between_images' style='margin:20px 20px 40px 50px;' >
