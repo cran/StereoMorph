@@ -17,6 +17,7 @@ digitizeImages <- function(image.file = image.file, shapes.file = NULL,
 	if(is.null(app.dir)){
 		app_dir <- paste0(path.package("StereoMorph"), '/extdata/apps/digitizeImages')
 	}else{
+		#/Applications/XAMPP/xamppfiles/htdocs/data_analysis/r_package_development/StereoMorph/inst/extdata/apps/digitizeImages
 		app_dir <- app.dir
 	}
 

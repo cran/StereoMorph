@@ -14,6 +14,7 @@
 \alias{equalizeImageHist}
 \alias{erodeImage}
 \alias{estimateDistortion}
+\alias{estimateDLTCoefficients}
 \alias{findBoundaryPoints}
 \alias{findCornerSubPix}
 \alias{findEpipolarTangencyAngles}
@@ -54,8 +55,8 @@
 \tabular{ll}{
 Package: \tab StereoMorph\cr
 Type: \tab Package\cr
-Version: \tab 1.4.1\cr
-Date: \tab 2015-04-06\cr
+Version: \tab 1.5.1\cr
+Date: \tab 2016-06-04\cr
 License: \tab GPL-2\cr
 }
 }

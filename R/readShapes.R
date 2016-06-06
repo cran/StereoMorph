@@ -79,7 +79,7 @@ readShapes <- function(file, fields=NULL){
 							'rownames' = c(), 'colnames' = c()
 						)
 					}
-				
+					
 					# FILL FIELDS
 					dims[[name]][['nrow']][i] <- nrow(read_shapes[[i]][[name]])
 					dims[[name]][['ncol']][i] <- ncol(read_shapes[[i]][[name]])
@@ -87,7 +87,7 @@ readShapes <- function(file, fields=NULL){
 					if(!is.null(colnames(read_shapes[[i]][[name]]))) dims[[name]][['colnames']] <- unique(c(dims[[name]][['colnames']], colnames(read_shapes[[i]][[name]])))
 				}
 
-				if(class(read_shapes[[i]][[name]]) %in% c('list')){
+				if(class(read_shapes[[i]][[name]]) %in% c('list') && length(read_shapes[[i]][[name]]) > 0){
 					dims[[name]] <- list('type' = 'list', 'length' = length(file))
 				}
 			}
@@ -98,6 +98,8 @@ readShapes <- function(file, fields=NULL){
 		for(name in names(dims)){
 
 			if(!is.null(fields_internal)) if(!name %in% fields_internal) next
+			
+			if(length(dims[[name]]) == 0) next
 
 			if(dims[[name]][['type']] == 'vector'){
 				rlist[[name]] <- rep(NA, length(file))
@@ -123,12 +125,16 @@ readShapes <- function(file, fields=NULL){
 				rlist[[name]] <- list()
 			}
 		}
-
+		
 		# FILL RETURN LIST
 		for(i in 1:length(read_shapes)){
 		
-			for(name in names(read_shapes[[i]])){
+			for(name in names(rlist)){
 			
+				if(is.null(read_shapes[[i]][[name]])) next
+
+				if(length(read_shapes[[i]][[name]]) == 0) next
+				
 				if(!is.null(fields_internal)) if(!name %in% fields_internal) next
 
 				if(dims[[name]][['type']] == 'vector') rlist[[name]][i] <- read_shapes[[i]][[name]]
@@ -140,7 +146,7 @@ readShapes <- function(file, fields=NULL){
 
 					col_idx <- 1:ncol(read_shapes[[i]][[name]])
 					if(!is.null(colnames(read_shapes[[i]][[name]]))) col_idx <- colnames(read_shapes[[i]][[name]])
-					
+
 					# COPY IN VALUES
 					rlist[[name]][row_idx, col_idx, i] <- read_shapes[[i]][[name]][row_idx, col_idx]
 				}
@@ -163,7 +169,7 @@ readShapes <- function(file, fields=NULL){
 	if(!is.null(fields)) for(name in names(rlist)) if(!name %in% fields) rlist[[name]] <- NULL
 	for(name in names(rlist)) if(length(rlist[[name]]) == 0) rlist[[name]] <- NULL
 
-	class(rlist) <- 'shapes'
+	if(!is.null(rlist)) class(rlist) <- 'shapes'
 	rlist
 }
 

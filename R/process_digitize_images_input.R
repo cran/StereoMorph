@@ -48,10 +48,18 @@ process_digitize_images_input <- function(image.file = image.file,
 		}else{
 
 			## STEREO CASE
+			# FIND OVERLAPPING FILES
+			overlapping_images <- list.files(paste0(image.file, '/', image_fdir[1]))
+			for(i in 2:length(image.file)) overlapping_images <- overlapping_images[overlapping_images %in% list.files(paste0(image.file, '/', image_fdir[i]))]
+			if(length(overlapping_images) == 0) stop(paste0("No overlapping images among views found in 'image.file' ('", image.file, "')."))
+
+			# SET NUMBER OF IMAGES
+			number_images <- length(overlapping_images)
+			
 			# CHECK THAT EACH FOLDER IN THE IMAGE FOLDER HAS THE SAME NUMBER OF FILES
-			number_images <- rep(NA, length(image_fdir))
-			for(i in 1:length(image_fdir)) number_images[i] <- length(list.files(paste0(image.file, '/', image_fdir[i])))
-			if(sd(number_images) > 0) stop(paste0("When digitizing stereo image sets each folder within 'image.file' ('", image.file, "') must have the same number of files."))
+			#number_images <- rep(NA, length(image_fdir))
+			#for(i in 1:length(image_fdir)) number_images[i] <- length(list.files(paste0(image.file, '/', image_fdir[i])))
+			#if(sd(number_images) > 0) stop(paste0("When digitizing stereo image sets each folder within 'image.file' ('", image.file, "') must have the same number of files."))
 
 			# IF SUB-FOLDERS OF SHAPES.FILE DO NOT MATCH IMAGE_FDIR, CREATE THEM
 			if(!is.null(shapes.file) && sum(!image_fdir %in% list.files(shapes.file)) > 0)
@@ -63,21 +71,21 @@ process_digitize_images_input <- function(image.file = image.file,
 			if(!is.null(curve.points.file) && sum(!image_fdir %in% list.files(curve.points.file)) > 0) stop(paste0("The curve points folder (", curve.points.file, ") does not contain the same folders as the image.file (", image.file, ")."))
 
 			# CREATE MATRIX OF IMAGE FILES
-			images_fpaths <- matrix(NA, nrow=number_images, ncol=length(image_fdir))
+			images_fpaths <- matrix(overlapping_images, nrow=number_images, ncol=length(image_fdir))
 		
 			# FILL MATRIX WITH FILE NAMES ONLY
-			for(i in 1:length(image_fdir)) images_fpaths[, i] <- list.files(paste0(image.file, '/', image_fdir[i]))
+			#for(i in 1:length(image_fdir)) images_fpaths[, i] <- list.files(paste0(image.file, '/', image_fdir[i]))
 		
 			# CHECK THAT NAMES MATCH ACROSS ROWS (VIEWS)
-			found_in_all <- matrix(FALSE, nrow=nrow(images_fpaths), ncol=ncol(images_fpaths))
-			for(i in 1:nrow(images_fpaths)){
-				for(j in 1:ncol(images_fpaths)){
-					if(images_fpaths[i, j] %in% images_fpaths[i, (1:ncol(images_fpaths))[(1:ncol(images_fpaths)) != j]]) found_in_all[i, j] <- TRUE
-				}
-			}
+			#found_in_all <- matrix(FALSE, nrow=nrow(images_fpaths), ncol=ncol(images_fpaths))
+			#for(i in 1:nrow(images_fpaths)){
+			#	for(j in 1:ncol(images_fpaths)){
+			#		if(images_fpaths[i, j] %in% images_fpaths[i, (1:ncol(images_fpaths))[(1:ncol(images_fpaths)) != j]]) found_in_all[i, j] <- TRUE
+			#	}
+			#}
 
 			# REPORT ERROR IF ANY FILE NAMES DO NOT MATCH
-			if(sum(!found_in_all) > 0) stop(paste0("The contents of each folder in 'image.file' (", image.file, ") are not identical. File names within each view folder must match exactly across all views."))
+			#if(sum(!found_in_all) > 0) stop(paste0("The contents of each folder in 'image.file' (", image.file, ") are not identical. File names within each view folder must match exactly across all views."))
 
 			# ADD FILE PATHS TO EACH FILE
 			for(i in 1:ncol(images_fpaths)) images_fpaths[, i] <- paste0(image_fdir[i], '/', images_fpaths[, i])

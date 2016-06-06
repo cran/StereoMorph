@@ -20,7 +20,7 @@ dltCoefficients <- function(coor.3d, coor.2d){
 		# SKIP IF ALL NA
 		if(sum(!is.na(coor.2d[, , i])) == 0) next
 
-		if(is.null(rownames(coor.3d))){
+		if(is.null(rownames(coor.3d)) || is.null(rownames(coor.2d))){
 
 			# IF ROWNAMES ARE ABSENT ASSUME THAT ROWS CORRESPOND, FIND ROWS WHERE NEITHER NA
 			non_na <- (is.na(coor.2d[, 1, i]) == FALSE) + (is.na(coor.3d[, 1]) == FALSE) == 2

@@ -87,7 +87,29 @@ calibrateCameras <- function(img.dir, sq.size, nx, ny, cal.file, corner.dir,
 
 		# GET IMAGE SIZE IN EACH VIEW
 		if(undistort){
-			stop("Undistortion not yet available for image input.")
+			#stop("Undistortion not yet available for image input.")
+			
+			if(!is.null(cal.list$img.size)){
+				img_size <- cal.list$img.size
+			}else{
+				img_size <- matrix(NA, nrow=num_views, ncol=2, dimnames=list(img_sub_dir, c('w', 'h')))
+			}
+
+			# 
+			for(i in 1:num_views){
+
+				# File path to first image
+				first_image_fpath <- paste0(img.dir, '/', imgs_list_files[i], '/', img_fnames[1])
+
+				# Get image dimensions
+				if(grepl(pattern='[.]jpg$|[.]jpeg$', x=img_fnames[1], ignore.case=TRUE)) img_dim <- dim(readJPEG(first_image_fpath, native=TRUE))
+				if(grepl(pattern='[.]png$', x=img_fnames[1], ignore.case=TRUE)) img_dim <- dim(readPNG(first_image_fpath, native=TRUE))
+				if(grepl(pattern='[.]tif$|[.]tiff$', x=img_fnames[1], ignore.case=TRUE)) img_dim <- dim(readTIFF(first_image_fpath, native=TRUE))
+		
+				# Set image dimensions
+				img_size[i, 'w'] <- img_dim[2]
+				img_size[i, 'h'] <- img_dim[1]
+			}
 		}
 
 	}else if(img_type == 'video'){
@@ -251,7 +273,7 @@ calibrateCameras <- function(img.dir, sq.size, nx, ny, cal.file, corner.dir,
 		detect_corners <- FALSE
 
 		response <- readline(prompt="\n\t\tDo you wish to re-detect the calibration corners? (y/n) : ");
-		cat("\n")
+		if(print.progress) cat("\n")
 		#response <- 'n'
 
 		if(tolower(response) %in% c('yes', 'y')) detect_corners <- TRUE
@@ -382,23 +404,35 @@ calibrateCameras <- function(img.dir, sq.size, nx, ny, cal.file, corner.dir,
 
 	# FIND NUMBER OF NON-NA VIEWS FOR EACH ASPECT AND VIEW
 	non_na_by_view <- apply(!is.na(cal_corners), c(3, 4), 'sum') > 0
+	
+	# SET VIEW COMBINATIONS
+	if(num_views <= 2){view_combos <- list(c(1,2))}else{view_combos <- list(1:2, 2:3, c(1,3), 1:3)}
+
+	# FIND OVERLAPPING ASPECTS AMONG ALL PAIRS OF VIEWS
+	view_overlaps <- NULL
+	if(num_views > 2){
+
+		# FIND NUMBER OF OVERLAPPING ASPECTS
+		view_overlaps <- rep(NA, length(view_combos))
+		for(i in 1:length(view_combos)){
+			view_overlaps[i] <- sum(rowSums(non_na_by_view[, view_combos[[i]]]) == length(view_combos[[i]]))
+			names(view_overlaps)[i] <- paste(view_combos[[i]], collapse='_')
+		}
+	}
+
+	# CHECK FOR TWO GOOD PAIRS OF OVERLAPPING VIEWS BUT NO OVERLAP AMONG THREE VIEWS
+	unify_view_pairs <- FALSE
+	if(num_views > 2 && min(view_overlaps[c('1_2', '2_3', '1_3')]) < 5 && view_overlaps['1_2_3'] < 5) unify_view_pairs <- TRUE
 
 	if(print.progress){
 		cat(paste0("\t\tNumber of cases in which corners were found in at least ", min_views, " views: ", cal_views_found_num, "\n"))
 		if(img_type == 'image') cat(paste0("\t\t\tFilenames: ", paste0(gsub('.jpeg|.jpg|.tiff', '', img_fnames[cal_min_views_found], ignore.case=TRUE), collapse=", "), "\n"))
 		cat('\n')
 
-		# THIS WILL ONLY APPLY WITH GREATER THAN TWO VIEWS (CURRENTLY WRITTEN ONLY TO WORK WITH 3 VIEWS)
 		if(num_views > 2){
-			
-			# VIEW COMBINATIONS
-			view_combos <- list(1:2, 2:3, c(1,3), 1:3)
-
 			cat(paste0("\t\tNumber of aspects in which corners were found for all view combinations\n"))
-			for(view_combo in view_combos){
-				cat(paste0("\t\t\t", paste(img_sub_dir[view_combo], collapse=', '), ": ", sum(rowSums(non_na_by_view[, view_combo]) == length(view_combo)), "\n"))
-			}
-
+			for(i in 1:length(view_combos)) cat(paste0("\t\t\t", paste(img_sub_dir[view_combos[[i]]], collapse=', '), ": ", view_overlaps[i], "\n"))
+			cat(paste0("\n\t\tCalibration will calibrate view pairs and unify calibration coordinates\n"))
 			cat('\n')
 		}
 	}
@@ -444,7 +478,7 @@ calibrateCameras <- function(img.dir, sq.size, nx, ny, cal.file, corner.dir,
 				# SELECT AMONG NON-NA ASPECTS, SPECIFIED NUMBER BUT NO MORE THAN LENGTH
 				undist_sample_nona <- undist_sample_nona[1:min(max_undist_sample, length(undist_sample_nona))]
 				#undist_sample_nona <- undist_sample_nona[round(seq(1, length(undist_sample_nona), length=min(max_undist_sample, length(undist_sample_nona))))]
-
+				
 				# ESTIMATE DISTORTION COEFFICIENTS
 				dist_params <- estimateDistortion(coor.2d=cal_corners[, , undist_sample_nona, view], nx, 
 					image.size=img_size[view, ])
@@ -519,11 +553,11 @@ calibrateCameras <- function(img.dir, sq.size, nx, ny, cal.file, corner.dir,
 	}
 
 	######################## ESTIMATE DLT CALIBRATION COEFFICIENTS #######################
-	cat("\tCalibration coefficient estimation...")
+	if(print.progress) cat("\tCalibration coefficient estimation...")
 
 	# IF CALIBRATION COEFFICIENTS ALREADY IN LIST, ASK USER WHETHER TO RE-ESTIMATE COEFFICIENTS
 	estimate_cal_coeffs <- TRUE
-	if(!is.null(cal.list$cal.coeff)){
+	if(!is.null(cal.list$cal.coeff) || (!is.null(cal.list$sub1.cal.coeff) && !is.null(cal.list$sub2.cal.coeff))){
 		
 		# READ FROM LIST
 		cal_set_num <- cal.list$cal.set.num
@@ -544,115 +578,8 @@ calibrateCameras <- function(img.dir, sq.size, nx, ny, cal.file, corner.dir,
 		if(print.progress) cat('\n')
 	}
 
-	# IF NAMES OF ASPECTS TO BE SAMPLED ARE EXPLICITLY DEFINED, MAKE SURE LENGTH OF NUM SAMPLE MATCHES NUMBER OF ASPECTS
-	if(!is.null(sample.est)) num.sample.est <- length(sample.est)
-
-	if(is.null(sample.est)){
-
-		# REMOVE IMAGE PAIRS WHERE AT LEAST ONE IS NA (NUMBER OF NON-NA IMAGE PAIRS ALREADY DETERMINED)
-		cal_corners_trim <- cal_corners[, , aspect_non_na >= min_views, ]
-
-	}else{
-
-		# sample.est IS USED FOR DE-BUGGING
-		# OF THE PROVIDED SAMPLE ASPECTS FIND WHICH ARE NOT NA IN ANY VIEW
-		sample_est_non_na <- sample.est[!sample.est %in% names(aspect_non_na)[which(!aspect_non_na >= min_views)]]
-
-		# CHECK THAT NONE OF DEFINED ASPECTS ARE NA
-		if(length(sample_est_non_na) < length(sample.est))
-			stop(paste0("The following aspects were not found in at least one view and will not be included in the calibration estimation: ", paste(sample.est[!sample.est %in% sample_est_non_na], collapse=',')))
-
-		# USE DEFINED ASPECTS
-		cal_corners_trim <- cal_corners[, , sample_est_non_na, ]
-	}
-
 	# CHECK THAT CORNERS WERE FOUND IN AT LEAST 3 ASPECTS
-	if(cal_views_found_num < 2) stop(paste0("Corners were only detected in 1 or fewer aspects. At least 2 aspects are required for calibration."))
-	
-	# PRINT WARNING FOR 3 ASPECTS
-	if(cal_views_found_num <= 3){
-		if(estimate_cal_coeffs){
-			response <- readline(prompt=paste0("\n\t\tCorners were only detected in 3 or fewer aspects. More than 3 aspects are generally required for an accurate calibration. Do you still wish to continue with the calibration? (y/n) : "))
-			if(tolower(response) %in% c('no', 'n')) return(1)
-		}else{
-			warning(paste0("Corners were only detected in 3 or fewer aspects. More than 3 aspects are generally required for an accurate calibration."))
-		}
-	}
-
-	# SET DEFAULTS FOR COEFFICIENT ESTIMATION SAMPLING PARAMETERS
-	if(num.sample.est == 'auto'){
-		if(cal_views_found_num < 15){
-			num.sample.est <- cal_views_found_num
-		}else if(cal_views_found_num >= 15 && cal_views_found_num < 20){
-			num.sample.est <- 10
-		}else if(cal_views_found_num >= 20 && cal_views_found_num < 25){
-			num.sample.est <- 15
-		}else if(cal_views_found_num >= 25){
-			num.sample.est <- 20
-		}
-	}else{
-
-		# IF NUMBER OF FOUND ASPECTS IS LESS THAN NUMBER OF ASPECTS TO USE FOR ESTIMATION, MAKE SAMPLE NUMBER OF FOUND ASPECTS
-		if(cal_views_found_num < num.sample.est) num.sample.est <- cal_views_found_num
-	}
-
-	if(num.sample.sets == 'auto'){
-		if(cal_views_found_num <= 5){
-			num.sample.sets <- 1
-		}else if(cal_views_found_num >= 6 && cal_views_found_num <= 7){
-			num.sample.sets <- 2
-		}else if (cal_views_found_num >= 8){
-			num.sample.sets <- 3
-		}
-	}		
-
-	if(num.aspects.sample == 'auto'){
-		if(cal_views_found_num <= 5){
-			num.aspects.sample <- cal_views_found_num
-		}else if(cal_views_found_num >= 6 && cal_views_found_num <= 7){
-			num.aspects.sample <- 5
-		}else if (cal_views_found_num >= 8){
-			num.aspects.sample <- 6
-		}
-	}else{
-
-		# CHECK THAT NUMBER OF ASPECTS TO SAMPLE DOES NOT EXCEED TOTAL NUMBER OF FOUND ASPECTS
-		if(num.aspects.sample > num.sample.est) stop(paste0("'num.aspects.sample' (", num.aspects.sample, ") must be less than 'num.sample.est' (", num.sample.est, ")."))
-	}
-
-	# GET ESTIMATION SUBSAMPLE INDICES
-	sample_trim_est <- floor(seq(from=1, to=dim(cal_corners_trim)[3], length=num.sample.est))
-	
-	# GET ESTIMATION SUBSAMPLE
-	cal_corners_trim_est <- cal_corners_trim[, , sample_trim_est, ]
-
-	# GET OPTIMIZATION SUBSAMPLE - IF AT LEAST 10 ASPECTS NOT USED IN CALIBRATION, USE THOSE FOR OPTIMIZATION
-	cal_corners_trim_optim <- NULL
-	optim_with_cal <- TRUE
-	if(cal_views_found_num - num.sample.est >= 10){
-
-		# INDICES
-		sample_trim_optim <- (1:dim(cal_corners_trim)[3])[!(1:dim(cal_corners_trim)[3] %in% sample_trim_est)]
-		
-		# CAP AT MAX
-		sample_trim_optim <- sample_trim_optim[floor(seq(from=1, to=length(sample_trim_optim), length=min(length(sample_trim_optim), max.sample.optim)))]
-
-		# SUBSAMPLE
-		cal_corners_trim_optim <- cal_corners_trim[, , sample_trim_optim, ]
-		
-		optim_with_cal <- FALSE
-	}
-	
-	# IF MORE THAN TWO VIEWS, CHECK THAT ONE VIEW ISNT STRANDED WITHOUT COMMON CORNERS WITH OTHER VIEWS
-	if(num_views > 2){
-		common_by_view <- setNames(rep(NA, num_views), img_sub_dir)
-		for(view in 1:num_views){
-			common_by_view[view] <- sum((non_na_by_view[, view] > 0)*(rowSums(non_na_by_view[, -view]) >= min_views-1))
-			if(common_by_view[view] < round((num.aspects.sample+max.sample.optim) / 2)){
-				stop(paste0("There are only ", common_by_view[view], " aspects in view '", img_sub_dir[view], "' for which corners were detected in at least ", min_views-1, " other view(s). Try increasing 'num.aspects.read'."))
-			}
-		}
-	}
+	if(cal_views_found_num < 2 && !unify_view_pairs) stop(paste0("Corners were only detected in 1 or fewer aspects. At least 2 aspects are required for calibration."))
 
 	# CREATE ACCURACY CHECK FOLDERS
 	if(num.sample.est != 'auto'){
@@ -662,13 +589,7 @@ calibrateCameras <- function(img.dir, sq.size, nx, ny, cal.file, corner.dir,
 
 		# FIND COMBINATIONS OF ALL VIEWS
 		view_combo_sub_dir <- NULL
-		if(num_views == 2){
-
-			view_combos <- list(c(1,2))
-
-		}else if(num_views == 3){
-
-			view_combos <- list(c(1,2), c(2,3), c(1,3), c(1,2,3))
+		if(num_views > 2){
 
 			# CREATE SUB-FOLDER NAMES
 			view_combo_sub_dir <- rep(NA, length(view_combos))
@@ -678,183 +599,176 @@ calibrateCameras <- function(img.dir, sq.size, nx, ny, cal.file, corner.dir,
 			for(dir_name in view_combo_sub_dir) if(!file.exists(paste0(calib_dir, 'Error tests/', dir_name))) dir.create(paste0(calib_dir, 'Error tests/', dir_name))
 		}
 	}
-
-	if(num.sample.sets == 1){
-
-		set.seed(42);
-		cal_sample_sets <- list(sort(sample(1:num.sample.est, num.aspects.sample)))
-
-	}else{
-
-		# CREATE RANDOM SAMPLE SETS
-		cal_sample_sets <- list()
-		for(i in 1:max(num.sample.sets, 40)){
-
-			# GET SAMPLE SET
-			set.seed(i);
-			sample_set <- sample(1:num.sample.est, num.aspects.sample);
-
-			if(num_views > 2){
-
-				# FIND NUMBER OF NON-NA VIEWS FOR EACH ASPECT AND VIEW
-				non_na_by_view <- apply(!is.na(cal_corners_trim_est[, , sample_set, ]), c(3, 4), 'sum') > 0
-
-				common_by_view <- setNames(rep(NA, num_views), img_sub_dir)
-				for(view in 1:num_views) common_by_view[view] <- sum((non_na_by_view[, view] > 0)*(rowSums(non_na_by_view[, -view]) >= min_views-1))
-
-				# CHECK THAT NO VIEW IS UNDERREPRESENTED
-				if(sum(common_by_view < floor(num.aspects.sample / 2)) > 0) next
-			}
-			
-			# MAKE SURE THAT SAMPLE IS NOT THE SAME AS ANY OTHER SET
-			if(length(cal_sample_sets) > 0){
-				go_next <- FALSE
-				for(j in 1:length(cal_sample_sets)) if(sum(!sample_set %in% cal_sample_sets[[j]]) == 0){go_next <- TRUE;break}
-				if(go_next) next
-			}
-
-			# SAVE SAMPLE SET
-			cal_sample_sets[[length(cal_sample_sets)+1]] <- sort(sample_set)
-			
-			# IF NUMBER OF SAMPLE SETS HAS BEEN REACHED, BREAK
-			if(length(cal_sample_sets) == num.sample.sets) break
-		}
-	}
-
-	if(print.progress){
-		cat(paste0("\t\tNumber of aspects from total that will be sampled for calibration coefficient estimation (num.sample.est): ", num.sample.est, "\n"))
-		cat(paste0("\t\tNumber of unique sets of aspects to try (num.sample.sets): ", num.sample.sets, "\n"))
-		cat(paste0("\t\tNumber of aspects to sample for each set (num.aspects.sample): ", num.aspects.sample, "\n"))
-		if(num.sample.sets > 1){
-			cat(paste0("\t\tAspects in each sets:\n"))
-			for(i in 1:length(cal_sample_sets)) cat(paste0("\t\t\t", i, ": ", paste(dimnames(cal_corners_trim_est)[[3]][cal_sample_sets[[i]]], collapse=", "), "\n"))
-		}
-		cat(paste0("\t\tUse calibration aspects to determine the best calibration set?: ", optim_with_cal, "\n"))
-		if(!optim_with_cal) cat(paste0("\t\tNumber of aspects in optimization set: ", dim(cal_corners_trim_optim)[3], "\n"))
-	}
 	
-	# ESTIMATE DLT CALIBRATION COEFFICIENTS
-	if(estimate_cal_coeffs){
-		
-		# SAVE ALL 2D COORDINATES FOR ESTIMATION
-		coor_2d <- cal_corners_trim_est
+	# NUMBER OF COEFFICIENT ESTIMATION RUNS
+	num_coeff_est_runs <- 1
+	if(unify_view_pairs) num_coeff_est_runs <- 2
 
-		# REDUCE CORNER NUMBER FOR ALL GRIDS BY FITTING PERSPECTIVE GRID
-		# SET REDUCED GRID DIMENSIONS
-		rx <- ry <- 3
-		
-		# SET REDUCED GRID SIZES
-		sx <- ((nx-1)*sq.size.num) / (rx-1)
-		sy <- ((ny-1)*sq.size.num) / (ry-1)
+	for(est_run in 1:num_coeff_est_runs){
 
-		# EMPTY REDUCED GRID DIMENSION ARRAY
-		coor_2d_red <- array(NA, dim=c(rx*ry, 2, dim(coor_2d)[3], dim(coor_2d)[4]), dimnames=list(NULL, c('x', 'y'), dimnames(coor_2d)[[3]], dimnames(coor_2d)[[4]]))
+		cal_corners_sub <- cal_corners
+		aspect_non_na_sub <- aspect_non_na
+		min_views_sub <- min_views
+		cal_views_found_num_sub <- cal_views_found_num
+		num_views_sub <- num_views
+		img_sub_dir_sub <- img_sub_dir
+		img_sub_dir_salign_sub <- img_sub_dir_salign
+		non_na_by_view_sub <- non_na_by_view
 
-		if(print.progress) cat('\n\t\tReduce number of corners (', dim(coor_2d)[3]*dim(coor_2d)[4], ' checkerboards total)\n', sep='')
+		if(unify_view_pairs){
+			
+			# FIND SUBSET (PAIR) OF VIEWS THAT HAVE OVERLAPPING CORNER SETS
+			if(est_run == 1) view_subset <- view_combos[[which(view_overlaps > 5)[1]]]
+			if(est_run == 2) view_subset <- view_combos[[which(view_overlaps > 5)[2]]]
 
-		for(i in 1:dim(coor_2d)[3]){
-			for(j in 1:dim(coor_2d)[4]){
+			if(print.progress) cat(paste0("\n\t\tEstimating calibration coefficients for view subset: ", paste(img_sub_dir[view_subset], collapse=', '), "\n\n"))
 
-				if(print.progress) cat('\t\t\t', (i-1)*dim(coor_2d)[4] + j, ') Aspect: ', dimnames(coor_2d)[[3]][i], '; View: ', dimnames(coor_2d)[[4]][j], '; ', sep='')
-
-				# DOWNSAMPLE THE NUMBER OF CORNERS
-				coor_2d_red[, , i, j] <- resampleGridImagePoints(pts=coor_2d[, , i, j], 
-					nx=nx, rx=rx, ry=ry, fit.min.break=fit.min.break, print.progress=print.progress)$pts
-				
-				# fit.min.break is mean error
-			}
+			cal_corners_sub <- cal_corners[, , , view_subset]
+			aspect_non_na_sub <- rowSums(apply(!is.na(cal_corners_sub), c(3, 4), 'sum') > 0)
+			min_views_sub <- length(view_subset)
+			cal_views_found_num_sub <- sum(aspect_non_na_sub >= min_views_sub)
+			num_views_sub <- length(view_subset)
+			img_sub_dir_sub <- img_sub_dir[view_subset]
+			img_sub_dir_salign_sub <- img_sub_dir_salign[view_subset]
+			non_na_by_view_sub <- apply(!is.na(cal_corners_sub), c(3, 4), 'sum') > 0
 		}
 
-		# EMPTY LIST TO STORE CALIBRATION RESULTS
-		dlt_cal_cam_list <- list()
-
-		# CALIBRATE CAMERAS WITH EACH SAMPLE SET
-		cal_optim <- rep(NA, num.sample.sets)
-		for(i in 1:num.sample.sets){
-
-			if(print.progress) cat('\n\t\tAspects used in estimating coefficients: ', paste(dimnames(coor_2d_red)[[3]][cal_sample_sets[[i]]], collapse=", "), '\n', sep='')
-
-			# ESTIMATE DLT CALIBRATION COEFFICIENTS FOR ALL VIEWS
-			dlt_cal_cam <- dltCalibrateCameras(coor.2d=coor_2d_red[, , cal_sample_sets[[i]], ], nx=3, 
-				grid.size=c(sx, sy), print.progress=print.progress, print.tab='\t\t', 
-				reduce.grid.dim=FALSE, objective.min=objective.min, objective.min.break=objective.min.break, 
-				min.views=min_views, grid.incl.min=2, nlm.calls.max=nlm.calls.max, ...)
-			
-			if(print.progress) cat('\n')
-
-			dlt_cal_cam_list[[i]] <- list()
-
-			# SET COLUMN NAMES FOR COEFFICIENTS
-			colnames(dlt_cal_cam$cal.coeff) <- img_sub_dir
-
-			# ADD COEFFICIENT ESTIMATION RESULTS
-			dlt_cal_cam_list[[i]][['cal.set.num']] <- i
-			dlt_cal_cam_list[[i]][['cal.coeff']] <- dlt_cal_cam$cal.coeff
-			dlt_cal_cam_list[[i]][['mean.reconstruct.rmse']] <- dlt_cal_cam$mean.reconstruct.rmse
-			dlt_cal_cam_list[[i]][['coefficient.rmse']] <- dlt_cal_cam$coefficient.rmse
-			dlt_cal_cam_list[[i]][['cal.sample.aspects']] <- dimnames(coor_2d_red)[[3]][cal_sample_sets[[i]]]
-
-			if(!is.null(cal_corners_trim_optim)){
-
-				# TEST CALIBRATION ACCURACY AGAINST OPTIM SET
-				test_calibration <- dltTestCalibration(dlt_cal_cam$cal.coeff, cal_corners_trim_optim, nx, sq.size.num)
-			
-				# SAVE IPD ERROR FOR CHOOSING BEST CALIBRATION
-				cal_optim[i] <- mean(test_calibration$ipd.rmse)
-
-				# SAVE OTHER CALIBRATION ACCURACY TEST RESULTS
-				dlt_cal_cam_list[[i]][['cal.ipd.rmse']] <- test_calibration$ipd.rmse
-				dlt_cal_cam_list[[i]][['cal.ipd.abs.mean']] <- mean(abs(test_calibration$ipd.error))
-				dlt_cal_cam_list[[i]][['cal.ipd.abs.max']] <- max(abs(test_calibration$ipd.error))
-				dlt_cal_cam_list[[i]][['cal.ipd.abs.sd']] <- sd(abs(test_calibration$ipd.error))
-				dlt_cal_cam_list[[i]][['cal.ipd.mean']] <- mean(test_calibration$ipd.error)
-				dlt_cal_cam_list[[i]][['cal.ee.rms']] <- test_calibration$epipolar.rmse
-				dlt_cal_cam_list[[i]][['cal.ee.mean']] <- mean(test_calibration$epipolar.error)
-				dlt_cal_cam_list[[i]][['cal.ee.max']] <- max(test_calibration$epipolar.error)
-				dlt_cal_cam_list[[i]][['cal.ee.sd']] <- sd(test_calibration$epipolar.error)
-
-			}else{
-		
-				# SAVE RECONSTRUCT ERROR FOR CHOOSING BEST CALIBRATION
-				cal_optim[i] <- dlt_cal_cam$mean.reconstruct.rmse
-			}
-		}
-
-		# GET SAMPLE SET WITH MINIMUM ERROR
-		min_error_set <- which.min(cal_optim)
-	
-		# COPY ELEMENTS FROM MINIMUM ERROR SET
-		for(ename in names(dlt_cal_cam_list[[min_error_set]])) cal.list[[ename]] <- dlt_cal_cam_list[[min_error_set]][[ename]]
-
-		# SAVE CALIBRATION COEFFICIENTS
-		cal_coeff <- dlt_cal_cam_list[[min_error_set]]$cal.coeff
-		
-		# SAVE RESULTS OF COEFFICIENT ESTIMATION
-		cal_set_num <- dlt_cal_cam_list[[min_error_set]]$cal.set.num
-		coefficient_rmse <- dlt_cal_cam_list[[min_error_set]]$coefficient.rmse
-		mean_reconstruct_rmse <- dlt_cal_cam_list[[min_error_set]]$mean.reconstruct.rmse
-		cal_sample_aspects <- dlt_cal_cam_list[[min_error_set]]$cal.sample.aspects
+		# ESTIMATE DLT COEFFICIENTS
+		estimate_return <- estimateDLTCoefficients(cal.list, sample.est, num.sample.est, 
+			cal_corners=cal_corners_sub, aspect_non_na=aspect_non_na_sub, min_views=min_views_sub, 
+			cal_views_found_num=cal_views_found_num_sub, estimate_cal_coeffs, 
+			num.sample.sets, num.aspects.sample, max.sample.optim, num_views=num_views_sub, 
+			img_sub_dir=img_sub_dir_sub, non_na_by_view=non_na_by_view_sub, 
+			print.progress, nx, ny, sq.size.num, fit.min.break, objective.min, 
+			objective.min.break, nlm.calls.max, img_sub_dir_salign=img_sub_dir_salign_sub, 
+			unify_view_pairs, unify_sub=est_run, ...)
+		cal.list <- estimate_return$cal.list
+		cal_corners_trim_optim <- estimate_return$cal_corners_trim_optim
 
 		# SAVE CALIBRATION LIST
+		if(unify_view_pairs && estimate_cal_coeffs){
+			if(estimate_cal_coeffs) list2XML4R(list('calibration' = cal.list), file=cal.file)
+		}
+	}
+
+	# UNIFY CALIBRATION COORDINATE SETS
+	if(unify_view_pairs){ #&& estimate_cal_coeffs
+
+		# CREATE NEW CORNER ARRAY WITH ALL VIEWS
+		cal_corners_trim_optim <- cal_corners[, , aspect_non_na >=2, ]
+		cal_corners_trim_optim <- cal_corners_trim_optim[, , round(seq(from=1, to=dim(cal_corners_trim_optim)[3], length=max.sample.optim)), ]
+
+		# CREATE FOLDERS IF NOT PRESENT ALREADY
+		cal_sub_dig_dir <- paste0(calib_dir, 'Calibration unification points')
+		if(!file.exists(cal_sub_dig_dir)) dir.create(cal_sub_dig_dir)
+		for(i in 1:length(img_sub_dir)) if(!file.exists(paste0(cal_sub_dig_dir, '/', img_sub_dir[i]))) dir.create(paste0(cal_sub_dig_dir, '/', img_sub_dir[i]))
+
+		#cal_uni_ref_pts_names <- 
+		ref_shapes <- c('triangle', 'circle', 'square', 'pentagon')
+		cal_uni_ref_pts_names <- c(ref_shapes, paste0('double_', ref_shapes), paste0('paper_corner', 1:4), paste0('Ref_point_', 1:4))
+
+		digitize_ref_points <- TRUE
+		if(length(list.files(paste0(cal_sub_dig_dir, '/', img_sub_dir[1]))) > 0){
+			if(print.progress) cat("\n\t\tSaved calibration unification reference points detected.\n\n")
+			response <- readline(prompt="\t\tDo you wish to re-digitize or edit the calibration unification reference points? (y/n) : ");cat('\n')
+			if(tolower(response) %in% c('no', 'n')) digitize_ref_points <- FALSE
+		}
+
+		if(digitize_ref_points){
+
+			# DIGITIZE REFERENCE POINTS
+			digitizeImages(image.file=verify.dir, shapes.file=cal_sub_dig_dir,
+				landmarks.ref=cal_uni_ref_pts_names)
+				#app.dir='/Applications/XAMPP/xamppfiles/htdocs/data_analysis/r_package_development/StereoMorph/inst/extdata/apps/digitizeImages'
+		}
+
+		# FIND FILES AVAILABLE FOR ALL THREE VIEWS
+		cal_uni_ref_dirs <- list.files(cal_sub_dig_dir)
+		cal_uni_ref <- list.files(paste0(cal_sub_dig_dir, '/', img_sub_dir[1]))
+		for(i in 2:length(img_sub_dir)) cal_uni_ref <- cal_uni_ref[cal_uni_ref %in% list.files(paste0(cal_sub_dig_dir, '/', img_sub_dir[i]))]
+
+		# CREATE EMPTY REFERENCE POINT MATRICES
+		cal_uni_ref1 <- cal_uni_ref2 <- matrix(NA, nrow=0, ncol=3)
+		
+		# FILL MATRICES
+		for(i in 1:length(cal_uni_ref)){
+
+			# CREATE ARRAY BY FRAME
+			cal_uni_ref_frame <- array(NA, dim=c(length(cal_uni_ref_pts_names), 2, length(img_sub_dir)),
+				dimnames=list(cal_uni_ref_pts_names, NULL, img_sub_dir))
+
+			for(j in 1:length(img_sub_dir)){
+				lm <- readShapes(paste0(cal_sub_dig_dir, '/', img_sub_dir[j], '/', cal_uni_ref[i]))$landmarks.pixel
+				cal_uni_ref_frame[rownames(lm), , j] <- lm
+			}
+			
+			# REMOVE LANDMARKS WITH NA IN ANY VIEW
+			cal_uni_ref_frame <- cal_uni_ref_frame[rowSums(is.na(cal_uni_ref_frame[, 1, ])) == 0, , ]
+
+			# REMOVE ROW NAMES
+			rownames(cal_uni_ref_frame) <- paste0(rownames(cal_uni_ref_frame), '_', gsub('.txt', '', cal_uni_ref[i]))
+
+			# RECONSTRUCT LANDMARKS
+			dlt_rec1 <- dltReconstruct(cal.coeff=cal.list$sub1.cal.coeff, coor.2d=cal_uni_ref_frame[, , colnames(cal.list$sub1.cal.coeff)])
+			dlt_rec2 <- dltReconstruct(cal.coeff=cal.list$sub2.cal.coeff, coor.2d=cal_uni_ref_frame[, , colnames(cal.list$sub2.cal.coeff)])
+
+			# ADD TO MATRICES
+			cal_uni_ref1 <- rbind(cal_uni_ref1, dlt_rec1$coor.3d)
+			cal_uni_ref2 <- rbind(cal_uni_ref2, dlt_rec2$coor.3d)
+		}
+		
+		# FIND VIEW TO UNIFY WITH FIRST TWO
+		view_uni <- colnames(cal.list$sub2.cal.coeff)[!colnames(cal.list$sub2.cal.coeff) %in% colnames(cal.list$sub1.cal.coeff)]
+
+		# GET SUBSET OF 2D POINTS FOUND IN BOTH VIEWS (OF SECOND SUBSET)
+		cal_corners_cal_uni2 <- cal_corners[, , , colnames(cal.list$sub2.cal.coeff)]
+		cal_corners_cal_uni2_non_na <- rowSums(apply(!is.na(cal_corners_cal_uni2), c(3, 4), 'sum') > 0)
+		cal_corners_cal_uni2 <- cal_corners_cal_uni2[, , cal_corners_cal_uni2_non_na == 2, ]
+
+		# USE DLT COEFFICIENTS TO RECONSTRUCT ALL 2D COORDINATES
+		coor_2d_sub2 <- apply(cal_corners_cal_uni2, c(2, 4), matrix, byrow=FALSE)
+
+		# RECONSTRUCT INTO 3D
+		coor_3d_sub2 <- dltReconstruct(cal.coeff=cal.list$sub2.cal.coeff, coor.2d=coor_2d_sub2)$coor.3d
+
+		# CREATE ARRAY FOR UNIFICATION
+		uni_arr <- array(NA, dim=c(nrow(coor_3d_sub2) + nrow(cal_uni_ref1), 3, 2), 
+			dimnames=list(c(rep(NA, nrow(coor_3d_sub2)), rownames(cal_uni_ref1)), NULL, colnames(cal.list$sub2.cal.coeff)))
+
+		# FILL ARRAY
+		uni_arr[(nrow(coor_3d_sub2)+1):dim(uni_arr)[1], , 1] <- cal_uni_ref1
+		uni_arr[1:nrow(coor_3d_sub2), , 2] <- coor_3d_sub2
+		uni_arr[(nrow(coor_3d_sub2)+1):dim(uni_arr)[1], , 2] <- cal_uni_ref2
+
+		# UNIFY
+		uni_lan <- unifyLandmarks(uni_arr)
+
+		# SAVE 3D COORDINATES IN NEW COORDINATE SYSTEM
+		coor_3d_sub2_uni <- uni_lan$lm.matrix
+		
+		# SAVE UNIFICATION ERRORS
+		cal.list$uni.ref.err <- uni_lan$unify.error[!is.na(uni_lan$unify.error), ]
+
+		if(print.progress){
+			cat(paste0('\t\tUnification errors for calibration coordinate reference points (in ', sq.size.units, '):\n'))
+			cat(paste0('\t\t\t', paste(names(cal.list$uni.ref.err), cal.list$uni.ref.err, collapse='\n\t\t\t'), '\n'))
+		}
+
+		# FIND CALIBRATION COEFFICIENTS USING 2D COORDINATES AND TRANSFORMED 3D COORDINATES FOR VIEW-TO-UNIFY
+		dlt_coeff2 <- dltCoefficients(coor_3d_sub2_uni[1:nrow(coor_2d_sub2), ], coor_2d_sub2[, , view_uni])$cal.coeff
+
+		# ADD COLUMN TO CALIBRATION COEFFICIENTS
+		cal.list$cal.coeff <- cbind(cal.list$sub1.cal.coeff, dlt_coeff2)
+		colnames(cal.list$cal.coeff) <- c(colnames(cal.list$sub1.cal.coeff), view_uni)
+	}
+
+	# SAVE CALIBRATION LIST
+	if(unify_view_pairs || estimate_cal_coeffs){
+		cal_coeff <- cal.list$cal.coeff
 		list2XML4R(list('calibration' = cal.list), file=cal.file)
-
-		if(print.progress) cat("\n")
 	}
 
-	if(print.progress){
-
-		cat('\n')
-		if(num.sample.sets > 1){
-			cat(paste0("\t\tSelected aspect set (lowest reconstruction error): ", cal_set_num, "\n"))
-			cat(paste0("\t\t\tAspects in set: ", paste(dimnames(cal_corners_trim_est)[[3]][cal_sample_sets[[cal_set_num]]], collapse=", "), "\n"))
-		}
-		cat(paste0("\t\tMean reconstruction RMS Error: ", round(mean_reconstruct_rmse, 4), " px\n"))
-		cat(paste0("\t\tDLT Coefficient RMS Error:\n"))
-		for(i in 1:length(coefficient_rmse)){
-			cat(paste0("\t\t\t", img_sub_dir[i], paste(rep(' ', img_sub_dir_salign[i]), collapse=''), 
-				" : ", paste0(round(coefficient_rmse[i], 4), collapse=', '), " px\n"))
-		}
-	}
+	############################## TEST CALIBRATION ACCURACY #############################
 
 	# DEFAULT NULL
 	cal_corners_test <- NULL
@@ -863,12 +777,11 @@ calibrateCameras <- function(img.dir, sq.size, nx, ny, cal.file, corner.dir,
 		if(num_views == 2){
 
 			# TEST ACCURACY USING ALL ASPECTS
-			cal_corners_test <- cal_corners_trim
+			cal_corners_test <- cal_corners
 
 		}else{
 
 			# TEST ACCURACY USING ALL ASPECTS
-			#cal_corners_test <- cal_corners_trim
 			cal_corners_test <- cal_corners[, , aspect_non_na >= 2, ]
 		}
 
@@ -901,13 +814,23 @@ calibrateCameras <- function(img.dir, sq.size, nx, ny, cal.file, corner.dir,
 			# FIND NON-NA ASPECTS AMONG VIEWS
 			aspects_non_na <- rowSums(is.na(cal_corners_test[1,1, , view_combos[[i]]])) == 0
 
+			# SKIP IF NO OVERLAPPING ASPECTS
+			if(sum(aspects_non_na) == 0) next
+
 			# CREATE ERROR PLOTS
 			dlt_test <- createErrorPlots(cal.coeff=cal_coeff[, view_combos[[i]]], 
 				corners=cal_corners_test[, , aspects_non_na, view_combos[[i]]], nx=nx, 
 				sq.size.num=sq.size.num, sq.size.units=sq.size.units, 
 				file=save_to)
 
-			if(print.progress) if(i == length(view_combos)){print(summary(dlt_test, print.tab='\t\t'))}
+			if(print.progress){
+				if(!unify_view_pairs){
+					if(i == length(view_combos)){print(summary(dlt_test, print.tab='\t\t'))}
+				}else{
+					cat(paste0('\n\t\t', paste(img_sub_dir[view_combos[[i]]], collapse=', ')))
+					print(summary(dlt_test, print.tab='\t\t\t'))
+				}
+			}
 		}
 	}
 	

@@ -36,6 +36,7 @@ var image_load_count = 0;
 var initiate = 0;
 var initialX;
 var initialY;
+var input_focus = false;
 var js_ct = 0;
 var landmark_also_curve = new Array();
 var landmarks = new Array();
@@ -360,6 +361,14 @@ function alignSVGImage(w,h){
 function baseName(ev) {
 	var id = ev.target.getAttribute("id");
 	return id;
+}
+
+function blurInputs(){
+
+	document.getElementById('internal_corner_dim').blur();
+	document.getElementById('ruler_interval_world').blur();
+	document.getElementById('checker_square_world').blur();
+
 }
 
 function changeCurrentMarker(d){
@@ -1124,6 +1133,9 @@ function deleteRulerPoint(num1){
 
 function detectKeyEvent(e) {
 	var evt = e || window.event;
+
+	if(input_focus) return;
+
 	if(evt.shiftKey === true){
 		//if(evt.keyCode==65){if(auto_advance){auto_advance = false;}else{auto_advance = true;}} // a
 		if(evt.keyCode==82){} // r
@@ -1133,8 +1145,6 @@ function detectKeyEvent(e) {
 		if(evt.keyCode==38){move(0,-10);} // up arrow
 		if(evt.keyCode==40){move(0,10);} // down arrow
 		if(evt.keyCode==83){submitShapes();} // s
-		if(evt.keyCode==188){changeImage(document.getElementById('prev_image_aspect'));} // <
-		if(evt.keyCode==190){changeImage(document.getElementById('next_image_aspect'));} // >
 		if(evt.metaKey === true && evt.keyCode==37){move(-90,0);} // left arrow
 		if(evt.metaKey === true && evt.keyCode==39){move(90,0);} // right arrow
 		if(evt.metaKey === true && evt.keyCode==38){move(0,-90);} // up arrow
@@ -1153,6 +1163,8 @@ function detectKeyEvent(e) {
 		if(evt.keyCode==39){move(1,0);} // right arrow
 		if(evt.keyCode==38){move(0,-1);} // up arrow
 		if(evt.keyCode==40){move(0,1);} // down arrow
+		if(evt.keyCode==188){changeImage(document.getElementById('prev_image_aspect'));} // <
+		if(evt.keyCode==190){changeImage(document.getElementById('next_image_aspect'));} // >
 	}
 }
 
@@ -1604,6 +1616,9 @@ function getMouseMoveXY(e){
 		var current_position = rulers[current_ruler];
 	}
 	if(mousedown == 1 && globalkeypress == ''){		
+
+		if(input_focus) blurInputs();
+
 		distX = tempX - prevX;
 		distY = prevY - tempY;
 
@@ -1641,7 +1656,11 @@ function getMouseMoveXY(e){
 		//loadFrame();
 	}
 
-	svgDocument.onmouseup = function(){mousedown = 0;mouse_move_in_prox = 0;}
+	svgDocument.onmouseup = function(){
+		if(input_focus) blurInputs();
+		mousedown = 0;
+		mouse_move_in_prox = 0;
+	}
 
 	prevX = tempX;
 	prevY = tempY;
@@ -2222,6 +2241,14 @@ function move_photograph_y(d){
 	//svgDocument.getElementById("world").appendChild(image);
 }
 
+function onBlurInput(obj){
+	input_focus = false;
+}
+
+function onFocusInput(obj){
+	input_focus = true;
+}
+
 function onLoadFunctions(evt){
 
 	// Get browser name
@@ -2272,7 +2299,9 @@ function onLoadFunctions(evt){
 	}
 
 	svgDocument.onmousemove = getMouseMoveXY;
-	image_object.onmousewheel = scrollEvent;		// SAFARI
+	svgDocument.onmousewheel = scrollEvent;
+	//alert(image_object)
+	//image_object.onmousewheel = scrollEvent;		// SAFARI
 	document.onkeyup=function(){globalkeypress = '';}
 
 	// Set auto advance
@@ -2538,13 +2567,29 @@ function scrollEvent(e){
 		if(delta > max){delta = max;}
 		if(delta < -max){delta = -max;}
 		imageZoom(Math.round(delta*0.5)/20,s_initialX,s_initialY);
+	}else{
+		if(browser_name == 'Chrome'){
+			var delta = e.wheelDelta;
+			var max = 40;
+			if(delta > max){delta = max;}
+			if(delta < -max){delta = -max;}
+			imageZoom(Math.round(delta*0.1)/20,s_initialX,s_initialY);
+		}else if(browser_name == 'Safari'){
+			var delta = e.wheelDelta;
+			var max = 60;
+			if(delta > max){delta = max;}
+			if(delta < -max){delta = -max;}
+			imageZoom(Math.round(delta*0.1)/20,s_initialX,s_initialY);
+		}else{
+			var delta = e.wheelDelta;
+			var max = 60;
+			if(delta > max){delta = max;}
+			if(delta < -max){delta = -max;}
+			imageZoom(Math.round(delta*0.1)/20,s_initialX,s_initialY);
+		}
 	}
-	if(e.wheelDelta){ // SAFARI
-		var delta = e.wheelDelta;
-		var max = 60;
-		if(delta > max){delta = max;}
-		if(delta < -max){delta = -max;}
-		imageZoom(Math.round(delta*0.1)/20,s_initialX,s_initialY);
+
+	if(e.wheelDelta){ // SAFARI, CHROME
 	}
 }
 

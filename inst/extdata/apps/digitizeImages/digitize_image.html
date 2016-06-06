@@ -121,7 +121,7 @@
 							</div>
 
 							<b>Scale shapes using checkerboard</b>
-							<p style='margin:0px 0px 2px 0px;' >&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<b>Internal corners (row, col):</b>&nbsp;&nbsp;<input type="text" id="internal_corner_dim" name="internal_corner_dim" size="10" onkeyup="javascript:updateScaling();" onmouseout="javascript:updateScaling();" /></p>
+							<p style='margin:0px 0px 2px 0px;' >&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<b>Internal corners (row, col):</b>&nbsp;&nbsp;<input type="text" id="internal_corner_dim" name="internal_corner_dim" size="10" onfocus="javascript:onFocusInput(this);" onblur="javascript:onBlurInput(this);" onkeyup="javascript:updateScaling();" onmouseout="javascript:updateScaling();" /></p>
 
 							<div style='text-align:center;height:40px;margin:5px 0px 8px 0px;'>
 								<div style='float:left;margin-left:50px;' >
@@ -135,10 +135,10 @@
 							<div class='divider' ></div>
 							<div style='margin-top:8px;' ></div>
 
-							<p style='margin:0px 0px 2px 0px;' ><b>Ruler interval (units):</b>&nbsp;&nbsp;<input type="text" id="ruler_interval_world" name="ruler_interval_world" size="13" onkeyup="javascript:updateScaling();" onmouseout="javascript:updateScaling();" /></p>
+							<p style='margin:0px 0px 2px 0px;' ><b>Ruler interval (units):</b>&nbsp;&nbsp;<input type="text" id="ruler_interval_world" name="ruler_interval_world" size="13" onfocus="javascript:onFocusInput(this);" onblur="javascript:onBlurInput(this);" onkeyup="javascript:updateScaling();" onmouseout="javascript:updateScaling();" /></p>
 							<p style='margin:0px 0px 0px 0px;' ><b>Ruler interval (pixels):</b>&nbsp;<span id='ruler_interval_pixels' ></span></p>
 
-							<p style='margin:0px 0px 2px 0px;' ><b>Checkerboard square size (units):</b>&nbsp;&nbsp;<input type="text" id="checker_square_world" name="checker_square_world" size="13" onkeyup="javascript:updateScaling();" onmouseout="javascript:updateScaling();" /></p>
+							<p style='margin:0px 0px 2px 0px;' ><b>Checkerboard square size (units):</b>&nbsp;&nbsp;<input type="text" id="checker_square_world" name="checker_square_world" size="13" onfocus="javascript:onFocusInput(this);" onblur="javascript:onBlurInput(this);" onkeyup="javascript:updateScaling();" onmouseout="javascript:updateScaling();" /></p>
 							<p style='margin:0px 0px 5px 0px;' ><b>Checkerboard square size (pixels):</b>&nbsp;<span id='checker_square_pixel' ></span></p>
 
 							<p style='margin:0px 0px 5px 0px;' ><b>Scaling</b></p>

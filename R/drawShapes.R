@@ -37,22 +37,25 @@ drawShapes <- function(shapes, file, path.connect = NULL, connect.curve.points =
 	if('curves' %in% names(shapes) && 'curves' %in% draw) curves <- shapes$curves
 	
 	# Read path.connect
-	if(!is.list(path.connect)){
+	path_connect <- NULL
+	if(!is.null(path.connect)){
+		if(!is.list(path.connect)){
 	
-		# Check that file exists
-		if(!file.exists(path.connect)) stop(paste0("File '", path.connect, "' not found."))
+			# Check that file exists
+			if(!file.exists(path.connect)) stop(paste0("File '", path.connect, "' not found."))
 		
-		# Read lines
-		read_lines <- suppressWarnings(readLines(con=path.connect))
+			# Read lines
+			read_lines <- suppressWarnings(readLines(con=path.connect))
 		
-		path_connect <- list()
-		for(i in 1:length(read_lines)){
-			if(read_lines[i] == '') next
-			path_connect[[length(path_connect)+1]] <- gsub('(^[ ]+)|([ ]+$)', '', strsplit(read_lines[i], ',')[[1]])
-		}
+			path_connect <- list()
+			for(i in 1:length(read_lines)){
+				if(read_lines[i] == '') next
+				path_connect[[length(path_connect)+1]] <- gsub('(^[ ]+)|([ ]+$)', '', strsplit(read_lines[i], ',')[[1]])
+			}
 
-	}else{
-		path_connect <- path.connect
+		}else{
+			path_connect <- path.connect
+		}
 	}
 
 	# SET PATHS CONNECTING POINTS
@@ -117,8 +120,16 @@ drawShapes <- function(shapes, file, path.connect = NULL, connect.curve.points =
 
 	# Draw landmarks
 	if(!is.null(points)){
-		svgviewr.points(points, file=file, col.fill=point.col.fill, 
-			col.stroke=point.col.stroke, cex=point.cex, lwd=point.lwd)
+		if(animate){
+			svgviewr.points(points, file=file, col.fill=point.col.fill, 
+				col.stroke=point.col.stroke, cex=point.cex, lwd=point.lwd)
+		}else{
+			for(i in 1:dim(points)[3]){
+				svgviewr.points(points[, , i], file=file, col.fill=point.col.fill, 
+					col.stroke=point.col.stroke, cex=point.cex, lwd=point.lwd)
+			}
+		}
+
 	}
 
 	# SET CURVE CONNECT START
