@@ -4,6 +4,7 @@
 
 \alias{alignShapesToMidline}
 \alias{checkCornerOrder}
+\alias{check_system_command_SM}
 \alias{cprod_SM}
 \alias{createErrorPlots}
 \alias{dilateImage}
@@ -11,10 +12,13 @@
 \alias{dltCCEstimateStartParams}
 \alias{drawRectangle}
 \alias{drawShapes}
+\alias{epipolarBezier}
 \alias{equalizeImageHist}
 \alias{erodeImage}
 \alias{estimateDistortion}
+\alias{estimateUndistortion}
 \alias{estimateDLTCoefficients}
+\alias{extractFrames}
 \alias{findBoundaryPoints}
 \alias{findCornerSubPix}
 \alias{findEpipolarTangencyAngles}
@@ -32,30 +36,36 @@
 \alias{print_processing_times}
 \alias{process_digitize_images_input}
 \alias{readLandmarksToArray}
+\alias{readTPS}
 \alias{readXML4R}
 \alias{readXMLLines}
+\alias{read_video_info}
 \alias{reflectMissingShapes}
 \alias{removeOutlierCorners}
 \alias{rgbToGray}
 \alias{rotationMatrixZYX_SM}
 \alias{undistort}
+\alias{undistortionError}
+\alias{undistortShapes}
 \alias{uvector_SM}
 \alias{testCalibration}
 \alias{thresholdImageMatrix}
 \alias{tMatrixDC_SM}
+\alias{TPSToShapes}
+\alias{writeLMToTPS}
 \alias{XML4R2list}
 \alias{XML4R2listLines}
 
 \docType{package}
 \title{Stereo Camera Morphometrics}
 \description{
-\strong{StereoMorph} provides functions for the collection of 3D points and curves using a stereo camera setup. \strong{StereoMorph} can also be used for \href{http://home.uchicago.edu/~aolsen/software/digitizing.shtml}{collecting 2D shape data from photographs}. Please see \href{http://home.uchicago.edu/~aolsen/software/stereomorph.shtml}{StereoMorph tutorials} for step-by-step tutorials on how to use \strong{StereoMorph} for 2D or 3D shape data collection.
+\strong{StereoMorph} provides functions for the collection of 3D points and curves using a stereo camera setup. \strong{StereoMorph} can also be used for \href{https://aaronolsen.github.io/software/digitizing.html}{collecting 2D shape data from photographs}. Please see \href{https://aaronolsen.github.io/software/stereomorph.html}{StereoMorph tutorials} for step-by-step tutorials on how to use \strong{StereoMorph} for 2D or 3D shape data collection.
 }
 \details{
 \tabular{ll}{
 Package: \tab StereoMorph\cr
 Type: \tab Package\cr
-Version: \tab 1.5.1\cr
+Version: \tab 1.5.2\cr
 Date: \tab 2016-06-04\cr
 License: \tab GPL-2\cr
 }
@@ -63,7 +73,7 @@ License: \tab GPL-2\cr
 \author{
 Aaron Olsen, Annat Haber
 
-Maintainer: Aaron Olsen \email{aolsen@uchicago.edu}
+Maintainer: Aaron Olsen \email{aarolsen@gmail.com}
 }
 \keyword{ package }
 \seealso{

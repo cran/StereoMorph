@@ -45,6 +45,9 @@ process_digitize_images_input <- function(image.file = image.file,
 			# CREATE MATRIX OF IMAGE FILES
 			images_fpaths <- matrix(image_fdir, nrow=length(image_fdir), ncol=1)
 
+			# SET NUMBER OF VIEWS
+			num_views <- 1
+
 		}else{
 
 			## STEREO CASE
@@ -52,6 +55,9 @@ process_digitize_images_input <- function(image.file = image.file,
 			overlapping_images <- list.files(paste0(image.file, '/', image_fdir[1]))
 			for(i in 2:length(image.file)) overlapping_images <- overlapping_images[overlapping_images %in% list.files(paste0(image.file, '/', image_fdir[i]))]
 			if(length(overlapping_images) == 0) stop(paste0("No overlapping images among views found in 'image.file' ('", image.file, "')."))
+
+			# SET NUMBER OF VIEWS
+			num_views <- length(image_fdir)
 
 			# SET NUMBER OF IMAGES
 			number_images <- length(overlapping_images)
@@ -92,10 +98,10 @@ process_digitize_images_input <- function(image.file = image.file,
 		}
 
 		# CREATE MATCHING FILES FOR SHAPE DATA
-		if(!is.null(shapes.file)) shapes_fpaths <- gsub('.[a-zA-Z]+$', '.txt', images_fpaths)
-		if(!is.null(landmarks.file)) landmarks_fpaths <- gsub('.[a-zA-Z]+$', '.txt', images_fpaths)
-		if(!is.null(control.points.file)) control_points_fpaths <- gsub('.[a-zA-Z]+$', '.txt', images_fpaths)
-		if(!is.null(curve.points.file)) curve_points_fpaths <- gsub('.[a-zA-Z]+$', '.txt', images_fpaths)
+		if(!is.null(shapes.file)) shapes_fpaths <- gsub('[.][a-zA-Z]+$', '.txt', images_fpaths)
+		if(!is.null(landmarks.file)) landmarks_fpaths <- gsub('[.][a-zA-Z]+$', '.txt', images_fpaths)
+		if(!is.null(control.points.file)) control_points_fpaths <- gsub('[.][a-zA-Z]+$', '.txt', images_fpaths)
+		if(!is.null(curve.points.file)) curve_points_fpaths <- gsub('[.][a-zA-Z]+$', '.txt', images_fpaths)
 
 		# ADD DIRECTORY PREFIX
 		for(i in 1:ncol(images_fpaths)) images_fpaths[, i] <- paste0(image.file, '/', images_fpaths[, i])
@@ -108,6 +114,9 @@ process_digitize_images_input <- function(image.file = image.file,
 	# VECTOR INPUT, NOT DIRECTORY
 	if(is.vector(image.file) && grepl('[.][a-zA-Z]+$', image.file[1])){
 
+		# SET NUMBER OF VIEWS
+		num_views <- 1
+
 		# CHECK THAT SHAPES FILE IS ALSO A VECTOR
 		if(!is.null(shapes.file) && !is.vector(shapes.file)) stop("If 'image.file' is a vector, 'shapes.file' must also be a vector.")
 		if(!is.null(landmarks.file) && !is.vector(landmarks.file)) stop("If 'image.file' is a vector, 'landmarks.file' must also be a vector.")
@@ -116,7 +125,7 @@ process_digitize_images_input <- function(image.file = image.file,
 
 		# SET VECTORS AS SINGLE COLUMN MATRICES
 		images_fpaths <- matrix(image.file, ncol=1)
-		shapes_fpaths <- matrix(shapes.file, ncol=1)
+		if(!is.null(shapes.file)) shapes_fpaths <- matrix(shapes.file, ncol=1)
 		if(!is.null(landmarks.file)) landmarks_fpaths <- matrix(landmarks.file, ncol=1)
 		if(!is.null(control.points.file)) control_points_fpaths <- matrix(control.points.file, ncol=1)
 		if(!is.null(curve.points.file)) curve_points_fpaths <- matrix(curve.points.file, ncol=1)
@@ -124,6 +133,9 @@ process_digitize_images_input <- function(image.file = image.file,
 
 	# MATRIX INPUT
 	if(is.matrix(image.file)){
+
+		# SET NUMBER OF VIEWS
+		num_views <- 1
 
 		# CHECK THAT SHAPES FILE IS ALSO A MATRIX
 		if(!is.null(shapes.file) && !is.matrix(shapes.file)) stop("If 'image.file' is a matrix, 'shapes.file' must also be a matrix.")
@@ -139,22 +151,53 @@ process_digitize_images_input <- function(image.file = image.file,
 		curve_points_fpaths <- curve.points.file
 	}
 	
+	# MAKE SURE THAT NO IMAGES HAVE THE SAME NAME BUT DIFFERENT EXTENSION (FILE TYPE)
+	for(i in 1:ncol(images_fpaths)){
+		
+		# GET LIST OF FILENAMES
+		str_split <- strsplit(images_fpaths[, i], '/')
+		
+		# GET IMAGE NAMES
+		image_fnames <- rep(NA, nrow(images_fpaths))
+		for(j in 1:length(str_split)) image_fnames[j] <- gsub('[.][A-Z]+$', '', str_split[[j]][length(str_split[[j]])], ignore.case=TRUE)
+
+		# CHECK FOR DUPLICATES (WITHOUT FILE EXTENSION)
+		if(length(image_fnames) != length(unique(image_fnames)))
+			stop("Two or more images have the same name but a different file extension (e.g. image type). Please make sure that all image names are unique (excluding the file extension) so that there will be a one-to-one correspondence between the shape and image files.")
+	}
+	
 	# MAKE SURE THAT NUMBER OF ELEMENTS MATCHES ACROSS IMAGE AND SHAPE FILES
 	if(!is.null(shapes_fpaths) && nrow(shapes_fpaths) != nrow(images_fpaths)) stop(paste0("The length of 'shapes.file' (", nrow(shapes_fpaths), ") does not match the length of 'image.file' (", nrow(images_fpaths), ")."))
 	if(!is.null(landmarks_fpaths) && nrow(landmarks_fpaths) != nrow(images_fpaths)) stop(paste0("The length of 'landmarks.file' (", nrow(landmarks_fpaths), ") does not match the length of 'image.file' (", nrow(images_fpaths), ")."))
 	if(!is.null(control_points_fpaths) && nrow(control_points_fpaths) != nrow(images_fpaths)) stop(paste0("The length of 'control.points.file' (", nrow(control_points_fpaths), ") does not match the length of 'image.file' (", nrow(images_fpaths), ")."))
 	if(!is.null(curve_points_fpaths) && nrow(curve_points_fpaths) != nrow(images_fpaths)) stop(paste0("The length of 'curve.points.file' (", nrow(curve_points_fpaths), ") does not match the length of 'image.file' (", nrow(images_fpaths), ")."))
-	
-	# GET CALIBRATION COEFFICIENTS
+
+	# GET CALIBRATION INFORMATION
 	cal_coeffs <- NULL
+	undistort_params <- NULL
+	distort_params <- NULL
+	img_size <- NULL
+
 	if(!is.null(cal.file)){
+		
+		# CALIBRATION FILE CHECKS
+		if(!file.exists(cal.file)) stop(paste0("'cal.file' (", cal.file, ") not found."))
+		if(!grepl('[.]txt$', cal.file)) stop(paste0("'cal.file' (", cal.file, ") is not a supported filetype. Must be of type '.txt'."))
 		
 		cal_list <- XML4R2list(cal.file)
 		
 		if(is.list(cal_list)){
-			if('calibration' %in% names(cal_list)) cal_coeffs <- cal_list$calibration$cal.coeff
-			if('cal.coeff' %in% names(cal_list)) cal_coeffs <- cal_list$cal.coeff
+
+			if(!is.null(cal_list$calibration)) cal_list <- cal_list$calibration
+
+			cal_coeffs <- cal_list$cal.coeff
+
 			if(is.null(cal_coeffs)) stop(paste0("Calibration coefficients not found in '", cal.file, "'."))
+
+			undistort_params <- cal_list$undistort.params
+			distort_params <- cal_list$distort.params
+			img_size <- cal_list$img.size
+			
 		}else{
 
 			# SPLIT AT TABS
@@ -231,7 +274,11 @@ process_digitize_images_input <- function(image.file = image.file,
 		curve_points_fpaths = curve_points_fpaths, 
 		cal_coeffs = cal_coeffs,
 		landmarks_ref = landmarks_ref,
-		curves_ref = curves_ref
+		curves_ref = curves_ref,
+		undistort_params = undistort_params,
+		distort_params = distort_params,
+		img_size = img_size,
+		num_views = num_views
 	)
 
 	# CONVERT MATRICES TO LISTS/VECTORS IN ORDER TO PASS THROUGH JSON

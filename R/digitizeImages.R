@@ -15,10 +15,20 @@ digitizeImages <- function(image.file = image.file, shapes.file = NULL,
 
 	# GET STEREOMORPH SHINY APP DIRECTORY
 	if(is.null(app.dir)){
-		app_dir <- paste0(path.package("StereoMorph"), '/extdata/apps/digitizeImages')
-	}else{
-		#/Applications/XAMPP/xamppfiles/htdocs/data_analysis/r_package_development/StereoMorph/inst/extdata/apps/digitizeImages
-		app_dir <- app.dir
+		app_dir <- tryCatch({
+			app_dir <- paste0(path.package("StereoMorph"), "/extdata/apps/digitizeImages")
+		}, warning = function(w) {
+		}, error = function(e) {
+			if(e[1]$message == 'none of the packages are loaded'){
+				app_dir_dev <- '/Users/aaron/Documents/Research/github/StereoMorph/inst/extdata/apps/digitizeImages'
+				if(file.exists(app_dir_dev)){
+					return(app_dir_dev)
+				}else{
+					stop(e)
+				}
+			}
+		}, finally = {
+		})
 	}
 
 	# REMOVE ANY IMAGE FILES IN WWW IMG FOLDER

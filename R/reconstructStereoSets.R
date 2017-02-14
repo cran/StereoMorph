@@ -113,7 +113,8 @@ reconstructStereoSets <- function(shapes.2d, shapes.3d, cal.file,
 	
 	# GET CALIBRATION COEFFICIENTS
 	if(!file.exists(cal.file)) stop(paste0("The calibration file ('", cal.file, "') was not found."))
-	cal_coeff <- XML4R2list(cal.file)$calibration$cal.coeff
+	cal_list <- XML4R2list(cal.file)$calibration
+	cal_coeff <- cal_list$cal.coeff
 	
 	# IF NO COLUMN NAMES, USE 2D DIRECTORY NAMES
 	if(is.null(colnames(cal_coeff))) colnames(cal_coeff) <- names(files_2d)
@@ -179,7 +180,9 @@ reconstructStereoSets <- function(shapes.2d, shapes.3d, cal.file,
 
 			# READ SHAPES
 			read_shapes <- readShapes(view_fpaths[file.exists(view_fpaths)])
-			#print(names(read_shapes))
+
+			# UNDISTORT SHAPES
+			if(!is.null(cal_list$undistort.params)) read_shapes <- undistortShapes(read_shapes, cal_list)
 
 			if(!is.null(read_shapes$landmarks.pixel)){
 
@@ -389,6 +392,9 @@ reconstructStereoSets <- function(shapes.2d, shapes.3d, cal.file,
 					# GET CURVE POINTS
 					curve_points <- unified_lm[[i]][all_curve_pts[[j]], ]
 					rownames(curve_points) <- NULL
+					
+					# ENSURE AS NUMERIC
+					curve_points <- matrix(as.numeric(curve_points), nrow=nrow(curve_points), ncol=ncol(curve_points), dimnames=dimnames(curve_points))
 
 					# ADD TO LIST
 					curves_r[[curve_name]] <- curve_points
@@ -398,13 +404,20 @@ reconstructStereoSets <- function(shapes.2d, shapes.3d, cal.file,
 			# ADD FILE PATH TO WRITTEN FILES
 			files.written <- c(files.written, shapes_3d_fpath[i])
 			
+			# SET LANDMARKS TO SAVE
 			landmarks_in <- all_landmark_names_unique[all_landmark_names_unique %in% rownames(unified_lm[[i]])]
+			
+			# SET LANDMARKS MATRIX
+			lm_mat <- matrix(unified_lm[[i]][sort(landmarks_in), ], nrow=length(landmarks_in), ncol=3, dimnames=list(sort(landmarks_in), NULL))
+			
+			# ENSURE AS NUMERIC
+			lm_mat <- matrix(as.numeric(lm_mat), nrow=nrow(lm_mat), ncol=ncol(lm_mat), dimnames=dimnames(lm_mat))
 		
 			# SAVE 3D COORDINATES TO SHAPE FILE
 			list2XML4R(list=
 				list('shapes'=
 					list(
-						'landmarks'=unified_lm[[i]][sort(landmarks_in), ],
+						'landmarks'=lm_mat,
 						'curves'=curves_r
 					)
 				), file=shapes_3d_fpath[i])

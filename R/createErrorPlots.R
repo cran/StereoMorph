@@ -123,6 +123,9 @@ createErrorPlots <- function(cal.coeff, corners, nx, sq.size.num, sq.size.units 
 	rec_errors <- matrix(NA, nrow=dim(corners)[1], ncol=dim(corners)[3],
 		dimnames=list(NULL, dimnames(corners)[[3]]))
 
+	# SET NUMBER OF CORNERS ALONG OTHER DIMENSION
+	ny <- dim(corners_3d)[1]/nx
+
 	# FILL 3D CORNER ARRAY
 	for(aspect in 1:dim(corners)[3]){
 
@@ -163,17 +166,22 @@ createErrorPlots <- function(cal.coeff, corners, nx, sq.size.num, sq.size.units 
 	dev.off()
 
 	# Find interpoint distance errors
+	num_adj_pairs <- ny*length(seq(1, nx-1, by=2))
 	ipd_pos <- array(NA, dim=c(floor(dim(corners_3d)[1]/2), 3, dim(corners_3d)[3]), dimnames=list(NULL, c('x','y','z'), dimnames(corners_3d)[[3]]))
+	adj_mean_pos <- array(NA, dim=c(num_adj_pairs, 3, dim(corners_3d)[3]), dimnames=list(NULL, c('x','y','z'), dimnames(corners_3d)[[3]]))
 	ipd_error <- matrix(NA, nrow=floor(dim(corners_3d)[1]/2), ncol=dim(corners_3d)[3], dimnames=list(NULL, dimnames(corners_3d)[[3]]))
+	adj_error <- matrix(NA, nrow=num_adj_pairs, ncol=dim(corners_3d)[3], dimnames=list(NULL, dimnames(corners_3d)[[3]]))
 
 	for(aspect in 1:dim(corners_3d)[3]){
 		ipd_list <- findInterpointDistanceError(coor.3d=corners_3d[, , aspect], nx=nx, ny=dim(corners_3d)[1]/nx, sq.size=sq.size.num)
 		ipd_pos[, , aspect] <- ipd_list$ipd.pos
 		ipd_error[, aspect] <- ipd_list$ipd.error
+		adj_mean_pos[, , aspect] <- ipd_list$adj.pair.mean.pos
+		adj_error[, aspect] <- ipd_list$adj.pair.ipd.error
 	}
 
 	# Plot interpoint distance error as a function of position along the major axes
-	pdf(file=paste0(file, 'Point-to-point length error v position along major axes.pdf'), width=5.5, height=7.5)
+	pdf(file=paste0(file, 'Point-to-point length (All pairs) error v position along major axes.pdf'), width=5.5, height=7.5)
 	par(mfrow=c(3,1), mar=c(4.5,4.5,1,1))
 	ylab <- paste0('Point-to-point length error (', sq.size.units, ')')
 	plot(ipd_pos[, 1, ], ipd_error, ylab=ylab, xlab=paste0('Position along first major axis (', sq.size.units, ')'))
@@ -183,6 +191,18 @@ createErrorPlots <- function(cal.coeff, corners, nx, sq.size.num, sq.size.units 
 	plot(ipd_pos[, 3, ], ipd_error, ylab=ylab, xlab=paste0('Position along third major axis (', sq.size.units, ')'))
 	abline(h=0, lty=2)
 	dev.off()
-	
+
+	# Plot interpoint distance (adjacent points only) error as a function of position along the major axes
+	pdf(file=paste0(file, 'Point-to-point length (Adjacent) error v position along major axes.pdf'), width=5.5, height=7.5)
+	par(mfrow=c(3,1), mar=c(4.5,4.5,1,1))
+	ylab <- paste0('Point-to-point length error (', sq.size.units, ')')
+	plot(adj_mean_pos[, 1, ], adj_error, ylab=ylab, xlab=paste0('Position along first major axis (', sq.size.units, ')'))
+	abline(h=0, lty=2)
+	plot(adj_mean_pos[, 2, ], adj_error, ylab=ylab, xlab=paste0('Position along second major axis (', sq.size.units, ')'))
+	abline(h=0, lty=2)
+	plot(adj_mean_pos[, 3, ], adj_error, ylab=ylab, xlab=paste0('Position along third major axis (', sq.size.units, ')'))
+	abline(h=0, lty=2)
+	dev.off()
+
 	dlt_test
 }

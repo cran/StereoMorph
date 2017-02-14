@@ -4,7 +4,7 @@ uvector_SM <- function(v){
 
 	if(is.vector(v)){
 		d <- sqrt(sum(v^2))
-		if(d == 0){return(c(0,0,0))}
+		if(d == 0){return(rep(0, length(v)))}
 		return(unlist(v/d))
 	}
 	if(is.matrix(v)){

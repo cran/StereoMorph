@@ -35,7 +35,7 @@ reconstructStereoSets(shapes.2d, shapes.3d, cal.file, set.names = NULL,
 NULL
 }
 \details{
-Please see \href{http://home.uchicago.edu/~aolsen/software/stereomorph.shtml}{StereoMorph tutorials} for step-by-step tutorials on how to use \strong{StereoMorph} for 2D or 3D shape data collection.
+Please see \href{https://aaronolsen.github.io/software/stereomorph.html}{StereoMorph tutorials} for step-by-step tutorials on how to use \strong{StereoMorph} for 2D or 3D shape data collection.
 }
 \author{Aaron Olsen}
 \seealso{

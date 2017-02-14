@@ -186,7 +186,7 @@ matchCurvePoints <- function(curve_ref, curve_1, cal_coeff, min.direct.tangency 
 		next_non_na <- na.omit(match_idx[i:length(match_idx)])[1]
 
 		# SET WINDOW
-		epi_win <- c(prev_non_na, next_non_na)
+		epi_win <- sort(c(prev_non_na, next_non_na))
 	
 		#cat('\t', epi_win[1], ',', epi_win[2], '\n')
 

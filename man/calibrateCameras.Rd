@@ -48,7 +48,7 @@ a list of class \code{"calibrateCameras"} with the following elements:
   \item{coefficient.rmse}{the RMS error when \code{coor.2d} and the optimized 3D coordinates \code{coor.3d} are input to \code{\link{dltCoefficients}}.}
 }
 \details{
-Please see \href{http://home.uchicago.edu/~aolsen/software/stereomorph.shtml}{StereoMorph tutorials} for step-by-step tutorials on how to use \strong{StereoMorph} for 2D or 3D shape data collection.
+Please see \href{https://aaronolsen.github.io/software/stereomorph.html}{StereoMorph tutorials} for step-by-step tutorials on how to use \strong{StereoMorph} for 2D or 3D shape data collection.
 }
 \references{
 For a general overview of DLT: \url{http://kwon3d.com/theory/dlt/dlt.html}

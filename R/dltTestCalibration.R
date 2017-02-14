@@ -1,4 +1,5 @@
-dltTestCalibration <- function(cal.coeff, coor.2d, nx, sq.size, reciprocal = TRUE){
+dltTestCalibration <- function(cal.coeff, coor.2d, nx, sq.size, reciprocal = TRUE, 
+	align.princomp = FALSE){
 
 	# IF SINGLE ASPECT, ADD EXTRA DIMENSION TO MAKE 4D ARRAY
 	if(length(dim(coor.2d)) == 3) coor.2d <- array(coor.2d, dim=c(dim(coor.2d)[1:2], 1, dim(coor.2d)[3]))
@@ -22,36 +23,70 @@ dltTestCalibration <- function(cal.coeff, coor.2d, nx, sq.size, reciprocal = TRU
 	aitr_centroid_dist <- matrix(NA, nrow=nx*ny, ncol=dim(coor.2d)[3], dimnames=list(NULL, dimnames(coor.2d)[[3]]))
 	adj_pair_centroid_dist <- matrix(NA, nrow=ny*length(seq(1, nx-1, by=2)), ncol=dim(coor.2d)[3], dimnames=list(NULL, dimnames(coor.2d)[[3]]))
 	aitr_rmse <- matrix(NA, nrow=3, ncol=dim(coor.2d)[3], dimnames=list(c('x','y','z'), dimnames(coor.2d)[[3]]))
+	rec_errors <- matrix(NA, nrow=dim(coor.2d)[1], ncol=dim(coor.2d)[3], dimnames=list(NULL, dimnames(coor.2d)[[3]]))
+
+	# Make 3D corner array
+	corners_3d <- array(NA, dim=c(nx*ny, 3, dim(coor.2d)[3]), 
+		dimnames=list(NULL, c('x', 'y', 'z'), dimnames(coor.2d)[[3]]))
+
+	# Reconstruct and fill array
+	for(aspect in 1:dim(coor.2d)[3]){
+		dlt_recon <- dltReconstruct(cal.coeff, coor.2d[, , aspect, ])
+		rec_errors[, aspect] <- dlt_recon$rmse
+		corners_3d[, , aspect] <- dlt_recon$coor.3d
+	}
+
+	if(align.princomp){
+
+		# Find centers of each checkerboard
+		corners_3d_centers <- t(apply(corners_3d, 3, 'colMeans'))
+
+		# Find the corner centroid
+		corners_centroid <- colMeans(corners_3d_centers)
+	
+		# Center all corners about centroid
+		corners_3d <- corners_3d - array(matrix(corners_centroid, nrow=dim(corners_3d)[1], ncol=3, byrow=TRUE), dim=dim(corners_3d))
+
+		# Find centers of translated checkerboards
+		corners_3d_centers <- t(apply(corners_3d, 3, 'colMeans'))
+
+		# Find major axis of 3D points
+		pca <- princomp(corners_3d_centers)
+		prin_comp <- rbind(cprod_SM(pca$loadings[, 'Comp.1'], pca$loadings[, 'Comp.2']), pca$loadings[, 'Comp.2'], pca$loadings[, 'Comp.1'])
+		#print(prin_comp)
+
+		# Align the principal components with z,y,x
+		RM <- tMatrixDC_SM(prin_comp, diag(3))
+	
+		# Apply rotation matrix
+		for(aspect in 1:dim(corners_3d)[3]) corners_3d[, , aspect] <- corners_3d[, , aspect] %*% RM
+		prin_comp <- prin_comp %*% RM
+	}
 
 	# LOOP THROUGH EACH ASPECT
 	for(aspect in 1:dim(coor.2d)[3]){
-
-		# GET 3D RECONSTRUCTED POINTS
-		dlt_rec <- dltReconstruct(cal.coeff, coor.2d[, , aspect,])
-
 
 		## FIND ALIGNED TO IDEAL RECONSTRUCTION ERRORS
 		# MAKE THEORETICAL GRID OF SAME SIZE FOR ESTIMATE COMPARISON
 		coor_3d <- transformPlanarCalibrationCoordinates(tpar=rep(0, 6), nx=nx, ny=ny, sx=sq.size.num)
 
 		# GET OPTIMAL POINT ALIGNMENT
-		coor_3d_unify <- findOptimalPointAlignment(dlt_rec$coor.3d, coor_3d)
+		coor_3d_unify <- findOptimalPointAlignment(corners_3d[, , aspect], coor_3d)
 		
 		# SAVE 3D COORDINATE POSITIONS
 		aitr_pos[, , aspect] <- coor_3d_unify
 
 		# SAVE ERROR IN REFERENCE-ESTIMATE POINT POSITION AND POSITION OF ESTIMATE POINTS
-		aitr_error[, , aspect] <- dlt_rec$coor.3d - coor_3d_unify
+		aitr_error[, , aspect] <- corners_3d[, , aspect] - coor_3d_unify
 
 
 		## FIND INTERPOINT DISTANCE ERROR
 		# GENERATE RANDOM POINT PAIRS, NO POINTS ARE REPEATED
-		ipd_list <- findInterpointDistanceError(coor.3d=dlt_rec$coor.3d, nx=nx, ny=ny, sq.size=sq.size.num)
+		ipd_list <- findInterpointDistanceError(coor.3d=corners_3d[, , aspect], nx=nx, ny=ny, sq.size=sq.size.num)
 		ipd[, aspect] <- ipd_list$ipd
 		ipd_error[, aspect] <- ipd_list$ipd.error
 		adj_pair_ipd_error[, aspect] <- ipd_list$adj.pair.ipd.error
 		adj_pair_mean_pos[, , aspect] <- ipd_list$adj.pair.mean.pos
-
 
 		## FIND EPIPOLAR ERROR
 		# MAKE MATRIX FOR PAIRING BETWEEN FIRST AND SUBSEQUENT VIEWS
@@ -113,7 +148,8 @@ dltTestCalibration <- function(cal.coeff, coor.2d, nx, sq.size, reciprocal = TRU
 		aitr.dist.rmse=aitr_dist_rmse,
 		aitr.rmse=aitr_rmse,
 		aitr.pos=aitr_pos,
-		aitr.centroid.dist=aitr_centroid_dist
+		aitr.centroid.dist=aitr_centroid_dist,
+		rec.error=rec_errors
 		)
 	class(l) <- 'dltTestCalibration'
 	l
@@ -148,10 +184,16 @@ summary.dltTestCalibration <- function(object, print.tab = '', ...){
 	r <- c(r, print.tab, '\t\tSD of adjacent-pair distance error: ', format(sd(object$adj.pair.ipd.error)), ' ', object$sq.size.units, '\n')
 
 	r <- c(r, print.tab, '\tEpipolar errors:\n')
-	r <- c(r, print.tab, '\t\tEpipolar RMS Error: ', format(mean(object$epipolar.rmse, na.rm=TRUE)), ' px\n')
+	r <- c(r, print.tab, '\t\tEpipolar Mean RMS Error: ', format(mean(object$epipolar.rmse, na.rm=TRUE)), ' px\n')
 	r <- c(r, print.tab, '\t\tEpipolar Mean Error: ', format(mean(object$epipolar.error, na.rm=TRUE)), ' px\n')
 	r <- c(r, print.tab, '\t\tEpipolar Max Error: ', format(max(object$epipolar.error, na.rm=TRUE)), ' px\n')
 	r <- c(r, print.tab, '\t\tSD of Epipolar Error: ', format(sd(object$epipolar.error, na.rm=TRUE)), ' px\n')
+	r <- c(r, print.tab, '\t\t95% of epipolar errors are less than: ', format(quantile(object$epipolar.error, probs=0.95, na.rm=TRUE)), ' px\n')
+
+	r <- c(r, print.tab, '\tReconstruction errors:\n')
+	r <- c(r, print.tab, '\t\tMean RMS Reconstruction Error: ', format(mean(object$rec.error, na.rm=TRUE)), ' px\n')
+	r <- c(r, print.tab, '\t\tMax RMS Reconstruction Error: ', format(max(object$rec.error, na.rm=TRUE)), ' px\n')
+	r <- c(r, print.tab, '\t\t95% of reconstruction errors are less than: ', format(quantile(object$rec.error, probs=0.95, na.rm=TRUE)), ' px\n')
 
 	class(r) <- "summary.dltTestCalibration"
 	r

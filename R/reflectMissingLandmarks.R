@@ -128,7 +128,7 @@ reflectMissingLandmarks <- function(lm.matrix, left = '(_l|_left)([_]?[0-9]*$)',
 
 	# REPLACE OLD ROWNAMES WITH SWAPPED ROWNAMES
 	rownames(lm_matrix_symm) <- rownames_r
-
+	
 	# UNDO REVERSE SIGN OF LANDMARKS ACROSS AN AXIS
 	lm_matrix_symm[, ncol(lm_matrix_symm)] <- -lm_matrix_symm[, ncol(lm_matrix_symm)]
 

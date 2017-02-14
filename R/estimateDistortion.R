@@ -1,24 +1,17 @@
-estimateDistortion <- function(coor.2d, cal.nx, image.size){
+estimateDistortion <- function(undistort.params, img.size){
 
-	# GET NUMBER OF CORNERS IN OTHER DIMENSION
-	cal.ny <- dim(coor.2d)[1] / cal.nx
+	nx <- 10
+	ny <- 10
 
-	# SET PLANAR 3D COORDINATES (OBJECT COORDINATES)
-	#coor_obj <- cbind(rep(0:(cal.nx-1), cal.ny), c(matrix(t(matrix((cal.ny-1):0, nrow=cal.ny, ncol=cal.nx)), nrow=1, byrow=F)), rep(0, cal.nx*cal.ny))
-	coor_obj <- cbind(
-		c(matrix(t(matrix(0:(cal.ny-1), nrow=cal.ny, ncol=cal.nx)), nrow=1, byrow=F)), 
-		rep(0:(cal.nx-1), cal.ny), 
-		rep(0, cal.nx*cal.ny)
-	)
-
-	# FILL ARRAY OF SAME DIMENSIONS AS 2D COORDINATES
-	coor_obj_array <- array(coor_obj, dim = c(dim(coor_obj), dim(coor.2d)[3]))
+	# Generate evenly spaced corners throughout image
+	d_corners <- cbind(c(matrix(t(matrix(seq(0, img.size[1], length=ny), nrow=ny, ncol=nx)), nrow=1, byrow=F)), 
+		rep(seq(0,img.size[2],length=nx), ny))
 	
-	# REMOVE NA ASPECTS
-	coor_obj_array <- coor_obj_array[, , !is.na(coor.2d[1,1,])]
-	coor.2d <- coor.2d[, , !is.na(coor.2d[1,1,])]
+	# Undistort using undistortion parameters
+	u_corners <- undistort(d_corners, image.size=img.size, center=undistort.params[c('cx', 'cy')], 
+		k=undistort.params[c('k1', 'k2', 'k3')], p=undistort.params[c('p1', 'p2')])
 
-	# TRY DIFFERENT STARTING PARAMETERS
+	# Try different starting parameters
 	p_start <- list(
 		rep(0, 5),
 		c(0.1, NA, NA, NA, NA),
@@ -30,23 +23,23 @@ estimateDistortion <- function(coor.2d, cal.nx, image.size){
 		c(0.01, 0.1, -1e-5, NA, NA)
 	)
 	
-	# SAVE WITH EACH TRY
+	# Save with each try
 	objectives <- rep(NA, length(p_start))
 	par <- as.list(rep(NA, length(p_start)))
 	
-	# SAVE OBJECTIVE WITH NO DISTORTION
-	objectives[1] <- distortionError(p=c(image.size[1]/2, image.size[2]/2, p_start[[1]]), 
-		coor.img=coor.2d, coor.obj=coor_obj_array, image.size=image.size)
-	par[[1]] <- c(image.size[1]/2, image.size[2]/2, p_start[[1]])
+	# Save objective with no distortion
+	objectives[1] <- distortionError(p=c(img.size[1]/2, img.size[2]/2, p_start[[1]]), 
+		ucoor=u_corners, dcoor=d_corners, img.size=img.size)
+	par[[1]] <- c(img.size[1]/2, img.size[2]/2, p_start[[1]])
 
-	# SKIP FIRST (NO DISTORTION CASE)
+	# Skip first (no distortion) case
 	for(i in 2:length(p_start)){
 
-		# FIND OPTIMAL DISTORTION COEFFICIENTS, SKIP IF RETURNS ERROR
+		# Find optimal distortion coefficients, skip if returns error
 		nlm_fit <- tryCatch(
 			expr={
-				nlminb(start=c(image.size[1]/2, image.size[2]/2, p_start[[i]]), objective=distortionError, 
-					coor.img=coor.2d, coor.obj=coor_obj_array, image.size=image.size)
+				nlminb(start=c(img.size[1]/2, img.size[2]/2, p_start[[i]]), objective=distortionError, 
+					ucoor=u_corners, dcoor=d_corners, img.size=img.size)
 			},
 			error=function(cond) return(NULL),
 			warning=function(cond) return(NULL)
@@ -58,11 +51,24 @@ estimateDistortion <- function(coor.2d, cal.nx, image.size){
 		par[[i]] <- nlm_fit$par
 	}
 	
-	# GET PARAMETERS FROM RUN WITH LOWEST ERROR (INCLUDING NO DISTORTION CASE)
-	dist_params <- par[[which.min(objectives)]]
+	# Get parameter from run with the lowest error (including no distortion case)
+	p <- par[[which.min(objectives)]]
 	
-	# ADD NAMES TO PARAMETERS
-	names(dist_params) <- c('cx', 'cy', 'k1', 'k2', 'k3', 'p1', 'p2')
+	# Add names to parameters
+	names(p) <- c('cx', 'cy', 'k1', 'k2', 'k3', 'p1', 'p2')
+
+	return(p)
 	
-	dist_params
+	# Check distortion parameters against original distorted corners
+	#rd_corners <- undistort(u_corners, image.size=img.size, center=c(p[1], p[2]), 
+	#	k=c(p[3], p[4], p[5]), p=c(p[6], p[7]))
+
+	#errors <- sqrt(rowSums((d_corners - rd_corners)^2))
+	#print(errors)
+
+	#pdf('estimateDistortion.pdf')
+	#plot(d_corners, asp=1)
+	#points(u_corners, cex=0.5, col='red')
+	#points(rd_corners, cex=0.7, col='green')
+	#dev.off()
 }
