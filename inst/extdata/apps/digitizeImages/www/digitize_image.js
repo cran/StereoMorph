@@ -27,7 +27,7 @@ var drag_div_mouse_down;
 var end_dupl = new Array();
 var epipolar_slope = "NA";
 var epipolar_intercept = "NA";
-var epipolar_cubic = "NA";
+var epipolar_cubic = new Array("NA");
 var find_ruler_interval_run_after = "NA";
 var frame_color = '#FFF3CE';
 var globalkeypress = '';
@@ -1265,7 +1265,9 @@ function drawEpipolarLine(){
 
 	//alert('Input: ' + epipolar_cubic)
 
-	if(epipolar_slope == 'NA' && epipolar_cubic == 'NA') return;
+	if(epipolar_slope == 'NA' && epipolar_cubic.length == 1) return;
+
+	//document.getElementById('current_process').innerHTML = 'Drawing epipolar line' + epipolar_slope + '; ' + epipolar_cubic;
 
 	var eline_colors = new Array('yellow', 'orange', 'aqua', 'magenta', 'red', 'slateblue');
 
@@ -1312,12 +1314,13 @@ function drawEpipolarLine(){
 			svgDocument.getElementById("world").appendChild(line);
 		}
 
-		if(epipolar_cubic != 'NA'){
+		if(epipolar_cubic.length > 1){
 
 			//alert('Cubic: ' + epipolar_cubic)
 
 			for(i=0;i < init_params.num_views;i++){
-			
+
+				if(epipolar_cubic[i*8] == undefined) continue;
 				if(epipolar_cubic[i*8] == 'NA') continue;
 
 				cb = epipolar_cubic.slice(i*8, i*8 + 8);
@@ -1345,7 +1348,7 @@ function drawEpipolarLine(){
 		}
 	}
 	
-	//alert(epipolar_slope)
+//	alert(epipolar_cubic)
 }
 
 function drawMarker(id, num1, num2, x, y, redraw_bezier){
@@ -2082,7 +2085,7 @@ function loadShapesFromFile(server_out){
 	clearEpipolarLine();
 	epipolar_slope = "NA";
 	epipolar_intercept = "NA";
-	epipolar_cubic = "NA";
+	epipolar_cubic = Array("NA");
 
 	// Landmarks added array - array to keep track of loaded landmarks
 	loaded_landmarks = new Array();
@@ -2280,6 +2283,7 @@ function moveToTarget(xi,yi,xf,yf,sw,sh,rnd){
 }
 
 function move_photograph_x(d){
+
 	var new_x = photograph.x + d;
 	var new_values = correctImagePosition(new_x,photograph.y,photograph.w,photograph.h,photograph.ow,photograph.oh);
 	photograph.x = new_values.x;
@@ -2395,7 +2399,10 @@ function onLoadFunctions(evt){
 
 	marker_selected = 0;
 	
-	selectObject('landmark', 1)
+	// If there are landmarks, select first landmark
+	if(rulers.length > 0) selectObject('ruler', 0)
+	if(curves.length > 0) selectObject('curve start', 0, 0)
+	if(landmarks.length > 0) selectObject('landmark', 0)
 }
 
 function onWindowResize(){
@@ -3283,11 +3290,13 @@ function updateCurveTable(curve_num){
 
 function updateEpipolarLine(type, num1, num2){
 
+	//document.getElementById('current_process').innerHTML = 'Update epipolar line';
+
 	if(type == undefined && !document.getElementById('show_epipolar_line').checked){
 		clearEpipolarLine();
 		epipolar_slope = "NA";
 		epipolar_intercept = "NA";
-		epipolar_cubic = "NA";
+		epipolar_cubic = Array("NA");
 		return;
 	}
 
@@ -3307,7 +3316,7 @@ function updateEpipolarLine(type, num1, num2){
 		clearEpipolarLine();
 		epipolar_slope = "NA";
 		epipolar_intercept = "NA";
-		epipolar_cubic = "NA";
+		epipolar_cubic = Array("NA");
 		return;
 	}
 	
@@ -3316,7 +3325,7 @@ function updateEpipolarLine(type, num1, num2){
 		clearEpipolarLine();
 		epipolar_slope = "NA";
 		epipolar_intercept = "NA";
-		epipolar_cubic = "NA";
+		epipolar_cubic = Array("NA");
 		return;
 	}
 
@@ -3342,7 +3351,7 @@ function updateEpipolarLine(type, num1, num2){
 		if(num2 == 0) submit_params.landmark_name = init_params.curves_ref[num1][1];
 		if(num2 == curves[num1].length-1) submit_params.landmark_name = init_params.curves_ref[num1][2];
 	}
-	
+
 	submit(submit_params);
 }
 
