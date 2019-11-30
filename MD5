@@ -1,4 +1,4 @@
-f26a7350de14c875925e6ace5450b08d *DESCRIPTION
+4fb68f5e04a20de2061441c628f4d916 *DESCRIPTION
 20fb3377206b747b4d23b3ca915e703a *NAMESPACE
 4d6592a389445545b419b96867e1f347 *R/RcppExports.R
 6f90b78fc6bbb63f05415f35fe3b3e8c *R/TPSToShapes.R
@@ -7,7 +7,7 @@ f26a7350de14c875925e6ace5450b08d *DESCRIPTION
 413fa55b85c7b91ed3d2f0baf127b843 *R/alignLandmarksToMidline.R
 55de283502b34316dd3239ac478bb050 *R/alignShapesToMidline.R
 b56aff306152072020e0f9d40958ad48 *R/avectors.R
-413b4a08f6408539ee4132bbbdef3d34 *R/btShapes.R
+bdf1dcc5fbe06b2ffdd8560b335b8c19 *R/btShapes.R
 7f06717422bff132dff4a0130926163a *R/calibrateCameras.R
 8ceeb47db0dbaae5356e07fdbd4c240c *R/checkCornerOrder.R
 b1e442a8ae82c9be25b8c59ab6bd8d76 *R/check_system_command_SM.R
@@ -39,7 +39,7 @@ d4a4d20c8fda8c8589205c9fde37a643 *R/estimateDLTCoefficients.R
 3e60ec200ee4c33c95225b458d2fa2c8 *R/estimateDistortion.R
 d00811a86c1ec360475f71bef3867adb *R/estimateUndistortion.R
 ed52da5dccad2f8c0d61a372d12f3bef *R/extractFrames.R
-04011aa04686ba8514cd2b351f4c7694 *R/findCheckerboardCorners.R
+91327e48594e44b627e27507eb52c2d5 *R/findCheckerboardCorners.R
 1a95f11fc51b49fbc5fddb46eb12999d *R/findEpipolarTangencyAngles.R
 5746ad604166ea6ce036aa8656ae07c8 *R/findHomography.R
 e8e5d7fb3d107aee0b06e3732d880fe6 *R/findInterpointDistanceError.R
@@ -81,7 +81,7 @@ fdd7616fd766c71e71ea45db6eea5aeb *R/rotationMatrixZYX_SM.R
 2d46de57852b3a1d03d660f66c0211d9 *R/testCalibration.R
 64b33c57f0532c182c221bb2e98451ec *R/transformPlanarCalibrationCoordinates.R
 7115dffbc5f14e048d2265ec963ef315 *R/undistort.R
-22287bb56e583010e25c4715c069c9d6 *R/undistortShapes.R
+55bb59d48b4bc65b1ba9fe7ab92b78de *R/undistortShapes.R
 0b7a774d36e3d9aabd6692c0bda1b716 *R/undistortionError.R
 b45323eb4101c4fe0463f9155fbdd1b0 *R/unifyLandmarks.R
 c6646de57ca2506af13fddb62b5cb2dc *R/uvector_SM.R
@@ -180,8 +180,8 @@ d80b10fa2d75c5a2ff2923d5c9012c44 *inst/extdata/test_cal_a7_v2.txt
 6d612b859b346ea6eb37ede6c78ea646 *inst/extdata/test_cal_a8_v2.txt
 27a6a46230063c77b6f64c6d1be6d2c5 *inst/extdata/test_cal_a9_v1.txt
 d2bea19ba68bc097256edc7574895178 *inst/extdata/test_cal_a9_v2.txt
-f8e64113f8a2ebb627bce952d47175b0 *man/StereoMorph-package.Rd
-76c78036029e9d9b59daf7d23a2fb073 *man/TPSToShapes.Rd
+9a61b00aaa034834d2731ebc29d741b5 *man/StereoMorph-package.Rd
+5cebcc855cfca047bfadaa7804c75921 *man/TPSToShapes.Rd
 c5dc673cbc263ab2162927ac4f20bbcc *man/alignLandmarksToMidline.Rd
 5274e10b78658e04d28350d8905771aa *man/avectors.Rd
 76486997145cd40b8dee09b4ab6fdbd5 *man/calibrateCameras.Rd
@@ -224,16 +224,16 @@ d7799071b7b833f52907bdc02dc6f9b4 *man/reflectMissingLandmarks.Rd
 80dd76fa56d6290a9dda2ead96415b81 *man/resampleGridImagePoints.Rd
 1a5c295fa18cff7aef6b4bfb2f561552 *man/transformPlanarCalibrationCoordinates.Rd
 3a69e359029616cad9ea8a20ee89bf35 *man/unifyLandmarks.Rd
-4143f4a3529940415d4cf16eed837c5e *man/writeLMToTPS.Rd
+a48e10ccaa4d3838eeaef2b5bc3e0685 *man/writeLMToTPS.Rd
 8080d3c289aeb6f34a15ab5bb8746e88 *src/RcppExports.cpp
 dca8fddbc533012474b4abc236b1dc54 *src/StereoMorph_init.c
 748bf3de65b9d71aac66d0cfdaf3c64c *src/dilateImage.cpp
 b7eb22e8f804a4c07f7e1e71cd261fcf *src/drawRectangle.cpp
-e2c6d49432f37b536bef1685d352eed7 *src/equalizeImageHist.cpp
+b652a37f671efd19436a93dad2faea74 *src/equalizeImageHist.cpp
 717eef503e763da3846a10747644a90e *src/erodeImage.cpp
 75960d873cd03af4ac567cf2884bd2e7 *src/findBoundaryPoints.cpp
-be4008e593bebeeecbe0a5566d44a855 *src/findCornerSubPix.cpp
+39dd946542810a8b7c42f063c4039df0 *src/findCornerSubPix.cpp
 55fcc84e89b8726a97106f458291b82d *src/generateQuads.cpp
 1b94b71dc37bd973b8488306aac5be8b *src/meanBlurImage.cpp
 416c092a3a60845939d409e7ac199e18 *src/rgbToGray.cpp
-1348eb63d95f31215435518d264b0e79 *src/thresholdImageMatrix.cpp
+89404b96371eb52beb824c4897d28baf *src/thresholdImageMatrix.cpp

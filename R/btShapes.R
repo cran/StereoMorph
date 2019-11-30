@@ -1,5 +1,7 @@
 btShapes <- function(scores, vectors, fcn, row.names, pcs = 1:2, n = c(3,4), m = 3, 
-	pc.margin=c(0,0), phy.means = NULL, centroid.size = 1, ...){
+	pc.margin=c(0,0), phy.means = NULL, centroid.size = 1, flip = rep(1,2), ...){
+
+	if(length(row.names) == 0) stop("Input parameter 'row.names' has length of 0. Length must correspond to the number of landmarks.")
 
 	# Set total number of shapes
 	n_shapes <- n[1]*n[2]
@@ -62,6 +64,9 @@ btShapes <- function(scores, vectors, fcn, row.names, pcs = 1:2, n = c(3,4), m =
 		# Center (by range) about PC score and save to array
 		lm_arr[, , i] <- xy
 	}
+
+	# Flip positions of shapes in plot by reversing scores
+	for(i in 1:length(pcs)) scores_bt[, pcs[i]] <- flip[i]*scores_bt[, pcs[i]]
 
 	# Plot each shape
 	for(i in 1:n_shapes){

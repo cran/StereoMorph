@@ -77,8 +77,8 @@
 \tabular{ll}{
 Package: \tab StereoMorph\cr
 Type: \tab Package\cr
-Version: \tab 1.6.2\cr
-Date: \tab 2018-10-05\cr
+Version: \tab 1.6.3\cr
+Date: \tab 2019-11-30\cr
 License: \tab GPL-2\cr
 }
 }
