@@ -1,4 +1,4 @@
-4fb68f5e04a20de2061441c628f4d916 *DESCRIPTION
+b671554b56ed50c74023d4d407c55c7a *DESCRIPTION
 20fb3377206b747b4d23b3ca915e703a *NAMESPACE
 4d6592a389445545b419b96867e1f347 *R/RcppExports.R
 6f90b78fc6bbb63f05415f35fe3b3e8c *R/TPSToShapes.R
@@ -180,7 +180,7 @@ d80b10fa2d75c5a2ff2923d5c9012c44 *inst/extdata/test_cal_a7_v2.txt
 6d612b859b346ea6eb37ede6c78ea646 *inst/extdata/test_cal_a8_v2.txt
 27a6a46230063c77b6f64c6d1be6d2c5 *inst/extdata/test_cal_a9_v1.txt
 d2bea19ba68bc097256edc7574895178 *inst/extdata/test_cal_a9_v2.txt
-9a61b00aaa034834d2731ebc29d741b5 *man/StereoMorph-package.Rd
+5d5b3aabf071162ddcd5d9f109fd87c0 *man/StereoMorph-package.Rd
 5cebcc855cfca047bfadaa7804c75921 *man/TPSToShapes.Rd
 c5dc673cbc263ab2162927ac4f20bbcc *man/alignLandmarksToMidline.Rd
 5274e10b78658e04d28350d8905771aa *man/avectors.Rd
@@ -206,7 +206,7 @@ c1bcace56db62fe330233d26600c6013 *man/extractFrames.Rd
 81c39494d5bc8f911acc486351958cf3 *man/findCheckerboardCorners.Rd
 d2ac3c4bd9a43d10fb32a86bc43297b1 *man/findOptimalPointAlignment.Rd
 967ef3683fe6c6f5d7f89d016f48e9e7 *man/gridPointsFit.Rd
-9b845f6f23cdd64742f44ccae0845956 *man/imagePlaneGridTransform.Rd
+314117c9e061f1c5d3216689a50ea21c *man/imagePlaneGridTransform.Rd
 e92303fb62accdf07a6b9777064f5c79 *man/imagePlaneGridTransformError.Rd
 e665b1934c0757a6c4e178320624cec6 *man/landmarkListToMatrix.Rd
 d572b4052a1bbef161f1125488859458 *man/landmarkMatrixToList.Rd
