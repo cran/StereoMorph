@@ -1,4 +1,4 @@
-b671554b56ed50c74023d4d407c55c7a *DESCRIPTION
+e23740e0dbaaf3673bec4e75434ef82a *DESCRIPTION
 20fb3377206b747b4d23b3ca915e703a *NAMESPACE
 4d6592a389445545b419b96867e1f347 *R/RcppExports.R
 6f90b78fc6bbb63f05415f35fe3b3e8c *R/TPSToShapes.R
@@ -39,7 +39,7 @@ d4a4d20c8fda8c8589205c9fde37a643 *R/estimateDLTCoefficients.R
 3e60ec200ee4c33c95225b458d2fa2c8 *R/estimateDistortion.R
 d00811a86c1ec360475f71bef3867adb *R/estimateUndistortion.R
 ed52da5dccad2f8c0d61a372d12f3bef *R/extractFrames.R
-91327e48594e44b627e27507eb52c2d5 *R/findCheckerboardCorners.R
+2cca0d612ef45cb0532d7b9335552a2b *R/findCheckerboardCorners.R
 1a95f11fc51b49fbc5fddb46eb12999d *R/findEpipolarTangencyAngles.R
 5746ad604166ea6ce036aa8656ae07c8 *R/findHomography.R
 e8e5d7fb3d107aee0b06e3732d880fe6 *R/findInterpointDistanceError.R
@@ -51,7 +51,7 @@ a68bce9cccc7dd21dbac0c996cc834d8 *R/imagePlaneGridTransformError.R
 91df27b05f8200219d12bc4ba0b7d026 *R/inverseGridTransform.R
 76cc83198b3321148189d695141acc35 *R/landmarkListToMatrix.R
 97d7c4da06d8a515c817dbbcf9c42695 *R/landmarkMatrixToList.R
-78364f172bb7f681998fd91d75f18342 *R/list2XML4R.R
+03764e8905f40c7c39bc93a91508a5b7 *R/list2XML4R.R
 68f3c4ed6d166f9b1737a95822f28e29 *R/listToJSONStr.R
 7dcaa3d756d7e85fa7a95f780c3dd93b *R/matchCurvePoints.R
 2a69322c9de9a0ce9431566b7c21ac1d *R/measureCheckerboardSize.R
@@ -66,14 +66,14 @@ a5376535e12b7c014da973f7526df0b1 *R/readBezierControlPoints.R
 1ef410617bb1e453631468f98748a407 *R/readLandmarksToArray.R
 15395854bc9e673cf7f7e675d949b879 *R/readLandmarksToList.R
 95cc66b669284aef71cf97b5ad9211be *R/readLandmarksToMatrix.R
-2de0a195147954bd2e1d04da7e6527bd *R/readShapes.R
+850d22415b3dea580b7f034bdf1854e2 *R/readShapes.R
 b46b8923aa65ad14637fb8979a1c81e3 *R/readTPS.R
 2919b53484b602769f4a739a1d7cf708 *R/readXML4R.R
 0dea1cbc8fbda4cc3d2390abdf453692 *R/readXMLLines.R
 d33affd04308b49d6fbb862d877034b6 *R/read_video_info.R
 7ed5b2ab2ecd0c4450e002f3bee04fd1 *R/reconstructStereoSets.R
-b8cb72eefb193ac75538f72abf8b7dc4 *R/reflectMissingLandmarks.R
-d338341e12e22ce9d4d85028d8a9ee37 *R/reflectMissingShapes.R
+6767a04f8db9585b0d2d3dc0fd9c7fd6 *R/reflectMissingLandmarks.R
+66a211f703492b70fbfd699bd3bddff0 *R/reflectMissingShapes.R
 81950c97d5cd81824c280ea227dfe484 *R/removeOutlierCorners.R
 4acf17ce522dfdeae77deb4d0d02d79f *R/resampleGridImagePoints.R
 fdd7616fd766c71e71ea45db6eea5aeb *R/rotationMatrixZYX_SM.R
@@ -86,7 +86,8 @@ fdd7616fd766c71e71ea45db6eea5aeb *R/rotationMatrixZYX_SM.R
 b45323eb4101c4fe0463f9155fbdd1b0 *R/unifyLandmarks.R
 c6646de57ca2506af13fddb62b5cb2dc *R/uvector_SM.R
 d4c1273fe37e644719010bd5c855aa1f *R/writeLMToTPS.R
-9ee5433233f4810b8e36735c91f9c2e4 *inst/CITATION
+b1ee82c1caec6503de7e58d37bc15512 *README.md
+488059e35139d4a1b7e1478a0aa63857 *inst/CITATION
 8345cd8d89c05a1ffe3191ef00eb47db *inst/extdata/Checkerboards/RHumerus.JPG
 8a33287e8f492b4bbad012ef1a7a2b77 *inst/extdata/Checkerboards/RRadius.JPG
 013b2caa43f6c4868daec8fd2a5f8417 *inst/extdata/Checkerboards/RUlna.JPG
@@ -180,7 +181,7 @@ d80b10fa2d75c5a2ff2923d5c9012c44 *inst/extdata/test_cal_a7_v2.txt
 6d612b859b346ea6eb37ede6c78ea646 *inst/extdata/test_cal_a8_v2.txt
 27a6a46230063c77b6f64c6d1be6d2c5 *inst/extdata/test_cal_a9_v1.txt
 d2bea19ba68bc097256edc7574895178 *inst/extdata/test_cal_a9_v2.txt
-5d5b3aabf071162ddcd5d9f109fd87c0 *man/StereoMorph-package.Rd
+a90dd578dff0227660415d55efca4f4f *man/StereoMorph-package.Rd
 5cebcc855cfca047bfadaa7804c75921 *man/TPSToShapes.Rd
 c5dc673cbc263ab2162927ac4f20bbcc *man/alignLandmarksToMidline.Rd
 5274e10b78658e04d28350d8905771aa *man/avectors.Rd
