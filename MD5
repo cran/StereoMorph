@@ -1,9 +1,9 @@
-e23740e0dbaaf3673bec4e75434ef82a *DESCRIPTION
+56d004cd155fd86ab5ce7686def0ee66 *DESCRIPTION
 20fb3377206b747b4d23b3ca915e703a *NAMESPACE
 4d6592a389445545b419b96867e1f347 *R/RcppExports.R
 6f90b78fc6bbb63f05415f35fe3b3e8c *R/TPSToShapes.R
 36893ccaed51d967ab4d6e5e78164f5e *R/XML4R2list.R
-4ca74823d27e51e34baae95452ec67ec *R/XML4R2listLines.R
+93fa1fef60c16d449ef1831e06cab7a1 *R/XML4R2listLines.R
 413fa55b85c7b91ed3d2f0baf127b843 *R/alignLandmarksToMidline.R
 55de283502b34316dd3239ac478bb050 *R/alignShapesToMidline.R
 b56aff306152072020e0f9d40958ad48 *R/avectors.R
@@ -14,7 +14,7 @@ b1e442a8ae82c9be25b8c59ab6bd8d76 *R/check_system_command_SM.R
 482fc13d545c1924a344879af835a43b *R/cprod_SM.R
 63152f518a7439eac446d9fe5baafb52 *R/createErrorPlots.R
 cc45b6a30a0f27f16e0bdafdd6f3eca4 *R/digitizeImage.R
-17c1565dd5d7dcde51744aece3039ed0 *R/digitizeImages.R
+0fe64d9c624c8296227440fec484ff5b *R/digitizeImages.R
 5c3f05a980bb76a8a40322ff26cee4b8 *R/distanceGridUnits.R
 6db0a8b146a73a68fb0637ba5a19c61a *R/distancePointToLine.R
 1b406cf2a94fb94396ab4239cbff0e6a *R/distancePointToPlane.R
@@ -51,7 +51,7 @@ a68bce9cccc7dd21dbac0c996cc834d8 *R/imagePlaneGridTransformError.R
 91df27b05f8200219d12bc4ba0b7d026 *R/inverseGridTransform.R
 76cc83198b3321148189d695141acc35 *R/landmarkListToMatrix.R
 97d7c4da06d8a515c817dbbcf9c42695 *R/landmarkMatrixToList.R
-03764e8905f40c7c39bc93a91508a5b7 *R/list2XML4R.R
+6829837d8b4812bfe2eb3af0f2677e4f *R/list2XML4R.R
 68f3c4ed6d166f9b1737a95822f28e29 *R/listToJSONStr.R
 7dcaa3d756d7e85fa7a95f780c3dd93b *R/matchCurvePoints.R
 2a69322c9de9a0ce9431566b7c21ac1d *R/measureCheckerboardSize.R
@@ -66,10 +66,10 @@ a5376535e12b7c014da973f7526df0b1 *R/readBezierControlPoints.R
 1ef410617bb1e453631468f98748a407 *R/readLandmarksToArray.R
 15395854bc9e673cf7f7e675d949b879 *R/readLandmarksToList.R
 95cc66b669284aef71cf97b5ad9211be *R/readLandmarksToMatrix.R
-850d22415b3dea580b7f034bdf1854e2 *R/readShapes.R
+9eee601fc80e0d781f18954bdfacc541 *R/readShapes.R
 b46b8923aa65ad14637fb8979a1c81e3 *R/readTPS.R
 2919b53484b602769f4a739a1d7cf708 *R/readXML4R.R
-0dea1cbc8fbda4cc3d2390abdf453692 *R/readXMLLines.R
+5cf120e608e0582f94988a49f2606981 *R/readXMLLines.R
 d33affd04308b49d6fbb862d877034b6 *R/read_video_info.R
 7ed5b2ab2ecd0c4450e002f3bee04fd1 *R/reconstructStereoSets.R
 6767a04f8db9585b0d2d3dc0fd9c7fd6 *R/reflectMissingLandmarks.R
@@ -99,7 +99,7 @@ f20c6151304af7b595ce61a78b3304a0 *inst/extdata/Shapes_3D/bubo_virginianus_FMNH48
 514e3f2d451fb4cebb894226d4bc73c7 *inst/extdata/Shapes_3D/psittacus_erithacus_FMNH312899_a2.txt
 7495486acd853a55be1cb75fb6381ad9 *inst/extdata/apps/digitizeImages/digitize_image.html
 19a82d697e006a0ff154712c72f6d635 *inst/extdata/apps/digitizeImages/server.R
-ed924f4ecb176ed5f92134df1222093a *inst/extdata/apps/digitizeImages/session_parameters.txt
+a539f6b40ae821923ee4d798ed46cf16 *inst/extdata/apps/digitizeImages/session_parameters.txt
 117658bdf29d94acf8af592ba552d73b *inst/extdata/apps/digitizeImages/ui.R
 ab953f913910ab3f2154750517567f8b *inst/extdata/apps/digitizeImages/www/digitize_image.css
 414c8ce1be2ee505512241df0ece03b8 *inst/extdata/apps/digitizeImages/www/digitize_image.js
@@ -181,7 +181,7 @@ d80b10fa2d75c5a2ff2923d5c9012c44 *inst/extdata/test_cal_a7_v2.txt
 6d612b859b346ea6eb37ede6c78ea646 *inst/extdata/test_cal_a8_v2.txt
 27a6a46230063c77b6f64c6d1be6d2c5 *inst/extdata/test_cal_a9_v1.txt
 d2bea19ba68bc097256edc7574895178 *inst/extdata/test_cal_a9_v2.txt
-a90dd578dff0227660415d55efca4f4f *man/StereoMorph-package.Rd
+85b81d6bba29e29d89d8119eda2dbeda *man/StereoMorph-package.Rd
 5cebcc855cfca047bfadaa7804c75921 *man/TPSToShapes.Rd
 c5dc673cbc263ab2162927ac4f20bbcc *man/alignLandmarksToMidline.Rd
 5274e10b78658e04d28350d8905771aa *man/avectors.Rd
